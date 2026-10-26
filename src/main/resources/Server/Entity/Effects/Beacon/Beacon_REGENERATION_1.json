@@ -1,0 +1,6 @@
+{
+  "Name": "beacon.effects.Beacon_REGENERATION_1.name",
+  "OverlapBehavior": "Overwrite",
+  "Debuff": false,
+  "StatusEffectIcon": "UI/StatusEffects/AddHealth/Tiny.png"
+}

@@ -1,0 +1,329 @@
+{
+  "lod": "auto",
+  "nodes": [
+    {
+      "id": "0",
+      "orientation": {
+        "w": 1,
+        "x": 0,
+        "z": 0,
+        "y": 0
+      },
+      "name": "Glass shell",
+      "position": {
+        "x": 0,
+        "z": 0,
+        "y": 16
+      },
+      "shape": {
+        "textureLayout": {
+          "bottom": {
+            "angle": 0,
+            "offset": {
+              "x": 0,
+              "y": 0
+            },
+            "mirror": {
+              "x": false,
+              "y": false
+            }
+          },
+          "top": {
+            "angle": 0,
+            "offset": {
+              "x": 0,
+              "y": 0
+            },
+            "mirror": {
+              "x": false,
+              "y": false
+            }
+          },
+          "back": {
+            "angle": 0,
+            "offset": {
+              "x": 0,
+              "y": 0
+            },
+            "mirror": {
+              "x": false,
+              "y": false
+            }
+          },
+          "front": {
+            "angle": 0,
+            "offset": {
+              "x": 0,
+              "y": 0
+            },
+            "mirror": {
+              "x": false,
+              "y": false
+            }
+          },
+          "left": {
+            "angle": 0,
+            "offset": {
+              "x": 0,
+              "y": 0
+            },
+            "mirror": {
+              "x": false,
+              "y": false
+            }
+          },
+          "right": {
+            "angle": 0,
+            "offset": {
+              "x": 0,
+              "y": 0
+            },
+            "mirror": {
+              "x": false,
+              "y": false
+            }
+          }
+        },
+        "visible": true,
+        "settings": {
+          "size": {
+            "x": 32,
+            "z": 32,
+            "y": 32
+          }
+        },
+        "stretch": {
+          "x": 1,
+          "z": 1,
+          "y": 1
+        },
+        "doubleSided": true,
+        "type": "box",
+        "unwrapMode": "custom",
+        "offset": {
+          "x": 0,
+          "z": 0,
+          "y": 0
+        },
+        "shadingMode": "standard"
+      },
+      "children": []
+    },
+    {
+      "id": "1",
+      "orientation": {
+        "w": 1,
+        "x": 0,
+        "z": 0,
+        "y": 0
+      },
+      "name": "Obsidian base",
+      "position": {
+        "x": 0,
+        "z": 0,
+        "y": 3.1
+      },
+      "shape": {
+        "textureLayout": {
+          "bottom": {
+            "angle": 0,
+            "offset": {
+              "x": 36,
+              "y": 4
+            },
+            "mirror": {
+              "x": false,
+              "y": false
+            }
+          },
+          "top": {
+            "angle": 0,
+            "offset": {
+              "x": 36,
+              "y": 4
+            },
+            "mirror": {
+              "x": false,
+              "y": false
+            }
+          },
+          "back": {
+            "angle": 0,
+            "offset": {
+              "x": 36,
+              "y": 26
+            },
+            "mirror": {
+              "x": false,
+              "y": false
+            }
+          },
+          "front": {
+            "angle": 0,
+            "offset": {
+              "x": 36,
+              "y": 26
+            },
+            "mirror": {
+              "x": false,
+              "y": false
+            }
+          },
+          "left": {
+            "angle": 0,
+            "offset": {
+              "x": 36,
+              "y": 26
+            },
+            "mirror": {
+              "x": false,
+              "y": false
+            }
+          },
+          "right": {
+            "angle": 0,
+            "offset": {
+              "x": 36,
+              "y": 26
+            },
+            "mirror": {
+              "x": false,
+              "y": false
+            }
+          }
+        },
+        "visible": true,
+        "settings": {
+          "size": {
+            "x": 24,
+            "z": 24,
+            "y": 6
+          }
+        },
+        "stretch": {
+          "x": 1,
+          "z": 1,
+          "y": 0.9666666666666667
+        },
+        "doubleSided": false,
+        "type": "box",
+        "unwrapMode": "custom",
+        "offset": {
+          "x": 0,
+          "z": 0,
+          "y": 0
+        },
+        "shadingMode": "standard"
+      },
+      "children": []
+    },
+    {
+      "id": "2",
+      "orientation": {
+        "w": 1,
+        "x": 0,
+        "z": 0,
+        "y": 0
+      },
+      "name": "Inner beacon texture",
+      "position": {
+        "x": 0,
+        "z": 0,
+        "y": 17
+      },
+      "shape": {
+        "textureLayout": {
+          "bottom": {
+            "angle": 0,
+            "offset": {
+              "x": 70,
+              "y": 6
+            },
+            "mirror": {
+              "x": false,
+              "y": false
+            }
+          },
+          "top": {
+            "angle": 0,
+            "offset": {
+              "x": 70,
+              "y": 6
+            },
+            "mirror": {
+              "x": false,
+              "y": false
+            }
+          },
+          "back": {
+            "angle": 0,
+            "offset": {
+              "x": 70,
+              "y": 4
+            },
+            "mirror": {
+              "x": false,
+              "y": false
+            }
+          },
+          "front": {
+            "angle": 0,
+            "offset": {
+              "x": 70,
+              "y": 4
+            },
+            "mirror": {
+              "x": false,
+              "y": false
+            }
+          },
+          "left": {
+            "angle": 0,
+            "offset": {
+              "x": 70,
+              "y": 4
+            },
+            "mirror": {
+              "x": false,
+              "y": false
+            }
+          },
+          "right": {
+            "angle": 0,
+            "offset": {
+              "x": 70,
+              "y": 4
+            },
+            "mirror": {
+              "x": false,
+              "y": false
+            }
+          }
+        },
+        "visible": true,
+        "settings": {
+          "size": {
+            "x": 20,
+            "z": 20,
+            "y": 22
+          }
+        },
+        "stretch": {
+          "x": 1,
+          "z": 1,
+          "y": 1
+        },
+        "doubleSided": false,
+        "type": "box",
+        "unwrapMode": "custom",
+        "offset": {
+          "x": 0,
+          "z": 0,
+          "y": 0
+        },
+        "shadingMode": "fullbright"
+      },
+      "children": []
+    }
+  ]
+}

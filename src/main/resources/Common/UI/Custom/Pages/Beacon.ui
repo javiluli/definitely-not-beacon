@@ -1,0 +1,141 @@
+$C = "../Common.ui";
+@Caption = LabelStyle(FontSize: 16, TextColor: #b9c9da, VerticalAlignment: Center);
+@Heading = LabelStyle(FontSize: 18, TextColor: #e0e7ef, HorizontalAlignment: Center, RenderBold: true);
+@PowerStyle = ButtonStyle(...$C.@TertiaryButtonStyle);
+@SelectedPowerStyle = ButtonStyle(
+ ...$C.@TertiaryButtonStyle,
+ Default: (Background: $C.@TertiaryHoveredButtonBackground),
+ Hovered: (Background: $C.@TertiaryPressedButtonBackground)
+);
+@ActivePowerStyle = ButtonStyle(
+ ...$C.@TertiaryButtonStyle,
+ Default: (Background: (...$C.@TertiaryHoveredButtonBackground, Color: #70df8c)),
+ Hovered: (Background: (...$C.@TertiaryHoveredButtonBackground, Color: #9aefab)),
+ Pressed: (Background: (...$C.@TertiaryPressedButtonBackground, Color: #70df8c))
+);
+@AcceptButtonStyle = TextButtonStyle(
+ ...$C.@SmallSecondaryTextButtonStyle,
+ Default: (Background: $C.@DefaultSquareButtonDefaultBackground, LabelStyle: $C.@SmallButtonLabelStyle),
+ Hovered: (Background: $C.@DefaultSquareButtonHoveredBackground, LabelStyle: $C.@SmallButtonLabelStyle),
+ Pressed: (Background: $C.@DefaultSquareButtonPressedBackground, LabelStyle: $C.@SmallButtonLabelStyle)
+);
+@SelectedSlot = PatchStyle(TexturePath: "../Beacon/Hytale/SlotSelected.png");
+@InventoryStyle = ItemGridStyle(
+ SlotSpacing: 2, SlotSize: 74, SlotIconSize: 64,
+ SlotBackground: "../Beacon/Hytale/Slot.png",
+ QuantityPopupSlotOverlay: "../Beacon/Hytale/QuantityPopupSlotOverlay.png",
+ BrokenSlotBackgroundOverlay: "../Beacon/Hytale/SlotItemBrokenCracksOverlay.png",
+ BrokenSlotIconOverlay: "../Beacon/Hytale/SlotItemBrokenIconOverlay.png",
+ DefaultItemIcon: "../Beacon/Hytale/UnknownItemIcon.png",
+ DurabilityBar: "../Beacon/Hytale/DurabilityBar.png",
+ DurabilityBarBackground: "../Beacon/Hytale/DurabilityBarBackground.png",
+ DurabilityBarAnchor: (Bottom: 10, Left: 13, Width: 48, Height: 2),
+ DurabilityBarColorStart: #a63232,
+ DurabilityBarColorEnd: #63b649
+);
+
+$C.@PageOverlay {
+ LayoutMode: Middle;
+ Group {
+  Anchor: (Width: 715);
+  LayoutMode: Top;
+  $C.@Container #BeaconPanel {
+   @ContentPadding = Padding(Full: 15);
+   Anchor: (Height: 389);
+   #Title {
+    $C.@Title #BeaconTitle {}
+   }
+   #Content {
+    Group {
+     Anchor: (Height: 206);
+     LayoutMode: Left;
+     Group {
+      Anchor: (Width: 342);
+      LayoutMode: Top;
+      Label { Anchor: (Height: 30); Text: %beacon.ui.primary; Style: @Heading; }
+      Group { LayoutMode: Left; Anchor: (Height: 56);
+       Label { Anchor: (Width: 112, Height: 48, Left: 14); Text: %beacon.ui.tier1; Style: @Caption; }
+       Button #SPEED { Anchor: (Width: 48, Height: 48, Right: 12); Style: @PowerStyle; TooltipText: %beacon.power.SPEED.name; TextTooltipStyle: $C.@DefaultTextTooltipStyle;
+        Group { Anchor: (Width: 32, Height: 32, Left: 8, Top: 8); Background: (TexturePath: "../Beacon/speed.png"); }
+       }
+       Button #HASTE { Anchor: (Width: 48, Height: 48); Style: @PowerStyle; TooltipText: %beacon.power.HASTE.name; TextTooltipStyle: $C.@DefaultTextTooltipStyle;
+        Group { Anchor: (Width: 32, Height: 32, Left: 8, Top: 8); Background: (TexturePath: "../Beacon/haste.png"); }
+       }
+      }
+      Group { LayoutMode: Left; Anchor: (Height: 56);
+       Label { Anchor: (Width: 112, Height: 48, Left: 14); Text: %beacon.ui.tier2; Style: @Caption; }
+       Button #RESISTANCE { Anchor: (Width: 48, Height: 48, Right: 12); Style: @PowerStyle; TooltipText: %beacon.power.RESISTANCE.name; TextTooltipStyle: $C.@DefaultTextTooltipStyle;
+        Group { Anchor: (Width: 32, Height: 32, Left: 8, Top: 8); Background: (TexturePath: "../Beacon/resistance.png"); }
+       }
+       Button #JUMPBOOST { Anchor: (Width: 48, Height: 48); Style: @PowerStyle; TooltipText: %beacon.power.JUMPBOOST.name; TextTooltipStyle: $C.@DefaultTextTooltipStyle;
+        Group { Anchor: (Width: 32, Height: 32, Left: 8, Top: 8); Background: (TexturePath: "../Beacon/jump_boost.png"); }
+       }
+      }
+      Group { LayoutMode: Left; Anchor: (Height: 56);
+       Label { Anchor: (Width: 112, Height: 48, Left: 14); Text: %beacon.ui.tier3; Style: @Caption; }
+       Group { Anchor: (Width: 108); LayoutMode: Center;
+        Button #STRENGTH { Anchor: (Width: 48, Height: 48); Style: @PowerStyle; TooltipText: %beacon.power.STRENGTH.name; TextTooltipStyle: $C.@DefaultTextTooltipStyle;
+         Group { Anchor: (Width: 32, Height: 32, Left: 8, Top: 8); Background: (TexturePath: "../Beacon/strength.png"); }
+        }
+       }
+      }
+     }
+     Group { Anchor: (Width: 1, Top: 8, Bottom: 8); Background: #34465a; }
+     Group { FlexWeight: 1; LayoutMode: Top;
+      Label { Anchor: (Height: 30); Text: %beacon.ui.secondary; Style: @Heading; }
+      Label { Anchor: (Height: 36); Text: %beacon.ui.tier4; Style: (FontSize: 16, TextColor: #b9c9da, HorizontalAlignment: Center); }
+      Group { LayoutMode: Center; Anchor: (Height: 56);
+       Button #REGENERATION { Anchor: (Width: 48, Height: 48, Right: 12); Style: @PowerStyle; TooltipText: %beacon.power.REGENERATION.name; TextTooltipStyle: $C.@DefaultTextTooltipStyle;
+        AssetImage #RegenerationIcon { Anchor: (Width: 32, Height: 32, Left: 8, Top: 8); }
+       }
+       Button #UPGRADE { Anchor: (Width: 48, Height: 48); Style: @PowerStyle; TooltipText: %beacon.ui.upgrade; TextTooltipStyle: $C.@DefaultTextTooltipStyle;
+        Group #UpgradeSPEED { Anchor: (Width: 28, Height: 28, Left: 5, Top: 12); Visible: false; Background: (TexturePath: "../Beacon/speed.png"); }
+        Group #UpgradeHASTE { Anchor: (Width: 28, Height: 28, Left: 5, Top: 12); Visible: false; Background: (TexturePath: "../Beacon/haste.png"); }
+        Group #UpgradeRESISTANCE { Anchor: (Width: 28, Height: 28, Left: 5, Top: 12); Visible: false; Background: (TexturePath: "../Beacon/resistance.png"); }
+        Group #UpgradeJUMPBOOST { Anchor: (Width: 28, Height: 28, Left: 5, Top: 12); Visible: false; Background: (TexturePath: "../Beacon/jump_boost.png"); }
+        Group #UpgradeSTRENGTH { Anchor: (Width: 28, Height: 28, Left: 5, Top: 12); Visible: false; Background: (TexturePath: "../Beacon/strength.png"); }
+        Label { Anchor: (Width: 14, Height: 18, Left: 33, Top: 3); Text: "II"; Style: (FontSize: 13, TextColor: #e0e7ef, RenderBold: true); }
+       }
+      }
+     }
+    }
+    Group { Anchor: (Height: 1, Bottom: 8); Background: #34465a; }
+    Group { Anchor: (Height: 80);
+     ItemIcon { Anchor: (Left: 173, Width: 40, Height: 40, Top: 17); ItemId: "Ingredient_Bar_Iron"; ShowItemTooltip: true; }
+     Group { Anchor: (Left: 241, Width: 1, Height: 58, Top: 8); Background: #34465a; }
+     ItemGrid #Payment {
+      Anchor: (Left: 270, Width: 74, Height: 74); SlotsPerRow: 1; Style: @InventoryStyle;
+      AreItemsDraggable: true; RenderItemQualityBackground: true;
+     }
+     $C.@SmallSecondaryTextButton #OK {
+      @Anchor = (Left: 372, Width: 140, Top: 21);
+      Text: %beacon.ui.accept; Style: @AcceptButtonStyle;
+     }
+    }
+    Label #Status { Anchor: (Height: 24); Visible: false; Style: (FontSize: 14, TextColor: #e8b485, Wrap: true, HorizontalAlignment: Center); }
+   }
+  }
+  Group { Anchor: (Height: 8); }
+  $C.@Container #InventoryPanel {
+   @ContentPadding = Padding(Full: 15);
+   #Title {
+    LayoutMode: Left;
+    $C.@Title { @Text = %beacon.ui.inventory; @Alignment = Start; FlexWeight: 1; }
+    Button #SORT { Anchor: (Width: 40, Height: 30, Right: 10); TooltipText: %beacon.ui.sort;
+     Group { Anchor: (Width: 24, Height: 24, Left: 8, Top: 3); Background: (TexturePath: "../Beacon/Hytale/AutoSortIcon.png"); }
+    }
+   }
+   #Content {
+    ItemGrid #Storage {
+     Anchor: (Width: 684); SlotsPerRow: 9; Style: @InventoryStyle;
+     AreItemsDraggable: true; RenderItemQualityBackground: true;
+    }
+    Group { Anchor: (Height: 8); }
+    ItemGrid #Hotbar {
+     Anchor: (Width: 684); SlotsPerRow: 9; Style: @InventoryStyle;
+     AreItemsDraggable: true; RenderItemQualityBackground: true;
+    }
+   }
+  }
+ }
+}

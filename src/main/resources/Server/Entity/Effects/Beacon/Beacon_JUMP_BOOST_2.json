@@ -1,0 +1,6 @@
+{
+  "Name": "beacon.effects.Beacon_JUMP_BOOST_2.name",
+  "OverlapBehavior": "Overwrite",
+  "Debuff": false,
+  "StatusEffectIcon": "UI/Custom/Beacon/jump_boost.png"
+}

@@ -1,0 +1,10 @@
+{
+    "Model": "VFX/Beacon/Beacon_Beam_Core.blockymodel",
+    "Texture": "VFX/Beacon/Beacon_Beam.png",
+    "MinScale": 1,
+    "MaxScale": 1,
+    "HitBox": { "Min": { "X": -0.3, "Y": 0, "Z": -0.3 }, "Max": { "X": 0.3, "Y": 4096, "Z": 0.3 } },
+    "AnimationSets": {
+        "Beam_Flow": { "Animations": [{ "Animation": "VFX/Beacon/Beacon_Beam_Flow.blockyanim", "Looping": true, "BlendingDuration": 0 }] }
+    }
+}

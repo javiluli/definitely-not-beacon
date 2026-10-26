@@ -1,0 +1,6 @@
+{
+  "Name": "beacon.effects.Beacon_STRENGTH_2.name",
+  "OverlapBehavior": "Overwrite",
+  "Debuff": false,
+  "StatusEffectIcon": "UI/Custom/Beacon/strength.png"
+}

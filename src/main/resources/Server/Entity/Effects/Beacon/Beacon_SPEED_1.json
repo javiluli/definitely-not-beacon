@@ -1,0 +1,6 @@
+{
+  "Name": "beacon.effects.Beacon_SPEED_1.name",
+  "OverlapBehavior": "Overwrite",
+  "Debuff": false,
+  "StatusEffectIcon": "UI/Custom/Beacon/speed.png"
+}

@@ -1,0 +1,17 @@
+name: "💡 Idea or feature"
+description: Suggest a feature or improvement for Definitely Not Beacon.
+title: "[Idea] "
+labels: ["idea"]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you improve?
+      description: Describe your idea for the mod and why it would be useful. English and Spanish suggestions are welcome.
+    validations:
+      required: true
+  - type: textarea
+    id: extra
+    attributes:
+      label: Examples or additional details
+      description: Add screenshots, examples or links if helpful.

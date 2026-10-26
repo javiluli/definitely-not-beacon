@@ -1,0 +1,6 @@
+{
+  "Name": "beacon.effects.Beacon_RESISTANCE_1.name",
+  "OverlapBehavior": "Overwrite",
+  "Debuff": false,
+  "StatusEffectIcon": "UI/Custom/Beacon/resistance.png"
+}

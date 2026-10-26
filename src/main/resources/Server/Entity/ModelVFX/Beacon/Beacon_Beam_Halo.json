@@ -1,0 +1,6 @@
+{
+    "SwitchTo": "AlphaTransparency",
+    "Opacity": 0.15,
+    "AnimationDuration": 0,
+    "AnimationRange": { "X": 1, "Y": 1 }
+}

@@ -1,0 +1,3 @@
+[mcp_servers.graphify]
+url = "https://api.graphify.com/mcp"
+auth = "oauth"

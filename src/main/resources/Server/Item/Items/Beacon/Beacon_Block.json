@@ -1,0 +1,69 @@
+{
+    "TranslationProperties": {
+        "Name": "beacon.items.Beacon_Block.name",
+        "Description": "beacon.items.Beacon_Block.description"
+    },
+    "MaxStack": 100,
+    "Quality": "Legendary",
+    "Icon": "Icons/Items/Beacon_Block_Icon.png",
+    "Categories": [
+        "Blocks.Deco"
+    ],
+    "PlayerAnimationsId": "Block",
+    "Recipe": {
+        "Input": [
+            { "ItemId": "Ingredient_Crystal_Cyan", "Quantity": 20 },
+            { "ItemId": "Rock_Basalt_Brick", "Quantity": 20 },
+            { "ItemId": "Ingredient_Bar_Thorium", "Quantity": 8 },
+            { "ItemId": "Ingredient_Life_Essence", "Quantity": 10 },
+            { "ItemId": "Ingredient_Gobliterator_Core", "Quantity": 1 }
+        ],
+        "BenchRequirement": [
+            { "Id": "Arcanebench", "Type": "Crafting", "Categories": ["Arcane_Misc"] }
+        ],
+        "OutputQuantity": 1
+    },
+    "Particles": [
+        {
+            "SystemId": "Beacon_Core_Pulse",
+            "TargetEntityPart": "PrimaryItem",
+            "TargetNodeName": "Inner beacon texture",
+            "ClearParticlesOnRemove": true
+        }
+    ],
+    "BlockType": {
+        "Material": "Solid",
+        "DrawType": "Model",
+        "Opacity": "Cutout",
+        "CustomModel": "Blocks/Beacon/Beacon.blockymodel",
+        "Light": { "Radius": 1, "Color": "#567" },
+        "Particles": [
+            {
+                "SystemId": "Beacon_Core_Pulse",
+                "TargetNodeName": "Inner beacon texture",
+                "ClearParticlesOnRemove": true
+            }
+        ],
+        "CustomModelTexture": [
+            {
+                "Texture": "Blocks/Beacon/Beacon_Texture.png",
+                "Weight": 1
+            }
+        ],
+        "HitboxType": "Full",
+        "Flags": {},
+        "Supporting": { "Up": [{ "FaceType": "Full" }] },
+        "Interactions": {
+            "Use": { "Interactions": [ { "Type": "Beacon_Open" } ] }
+        },
+        "Gathering": {
+            "Breaking": {
+                "GatherType": "Rocks"
+            }
+        },
+        "BlockParticleSetId": "Glass",
+        "BlockSoundSetId": "Glass",
+        "PhysicalMaterialId": "Glass",
+        "ParticleColor": "#a6f4ef"
+    }
+}

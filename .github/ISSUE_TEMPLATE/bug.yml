@@ -1,0 +1,40 @@
+name: "🐛 Bug"
+description: Report a bug in Definitely Not Beacon for Hytale.
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What happened?
+      description: Describe the actual and expected behavior. English and Spanish reports are welcome.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: Explain how to reproduce the problem. Include screenshots or a video if useful.
+    validations:
+      required: true
+  - type: input
+    id: versions
+    attributes:
+      label: Mod and Hytale versions
+      description: Include the mod version from the Mods tab, the game version and its patchline.
+      placeholder: Mod 0.1.0-beta; Hytale 0.7.4 (release)
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment and other mods
+      description: Local world or dedicated server? Include your operating system and other installed mods.
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs
+      description: >
+        Attach the relevant Hytale client or server log, or share a link.
+        Local Windows client logs are in `%APPDATA%\Hytale\UserData\Logs`.
+        Remove private information before sharing.

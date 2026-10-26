@@ -1,0 +1,45 @@
+name: "💥 Crash"
+description: Report a crash or forced disconnection in Definitely Not Beacon.
+title: "[Crash] "
+labels: ["crash"]
+body:
+  - type: dropdown
+    id: outcome
+    attributes:
+      label: What stopped working?
+      options:
+        - The game client crashed
+        - The server crashed
+        - I was disconnected from the world
+        - Not sure
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: What were you doing?
+      description: Describe what happened and any error message. Include reproduction steps or screenshots if available.
+    validations:
+      required: true
+  - type: input
+    id: versions
+    attributes:
+      label: Mod and Hytale versions
+      description: Include the mod version from the Mods tab, the game version and its patchline.
+      placeholder: Mod 0.1.0-beta; Hytale 0.7.4 (release)
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment and other mods
+      description: Local world or dedicated server? Include your operating system and other installed mods.
+  - type: textarea
+    id: logs
+    attributes:
+      label: Client or server logs
+      description: >
+        Attach the log from the failing client or server, or share a link.
+        Local Windows client logs are in `%APPDATA%\Hytale\UserData\Logs`.
+        If you do not have access to the server log, include the disconnect message.
+        Remove private information before sharing.

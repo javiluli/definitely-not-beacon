@@ -1,0 +1,27 @@
+{
+    "Group": "HytaleModding",
+    "Name": "Definitely Not Beacon",
+    "Version": "0.1.0-beta",
+    "Description": "Definitely Not Beacon - BETA-0.1. A clone of Minecraft's Beacon, brought to Hytale.",
+    "Authors": [
+        {
+            "Name": "javiluli"
+        }
+    ],
+    "Website": "https://github.com/javiluli/beacon-for-hytale",
+    "DisabledByDefault": false,
+    "IncludesAssetPack": true,
+    "Dependencies": {
+        "Hytale:AssetModule": "*",
+        "Hytale:EntityModule": "*",
+        "Hytale:InteractionModule": "*"
+    },
+    "OptionalDependencies": {
+        
+    },
+    "ServerVersion": "=0.7.4",
+    "Main": "dev.hytalemodding.DefinitelyNotBeaconPlugin",
+    "UpdateChecker": {
+        "CurseForge": ""
+    }
+}

@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "skills": {
+    "121-java-object-oriented-design": {
+      "source": "jabrena/plinth",
+      "sourceType": "github",
+      "skillPath": "skills/121-java-object-oriented-design/SKILL.md",
+      "computedHash": "3eaeb2b6a8947a33b056126d4192d75379bf464cb866270e78aa5227486c3c26"
+    },
+    "145-java-refactoring-high-performance": {
+      "source": "jabrena/plinth",
+      "sourceType": "github",
+      "skillPath": "skills/145-java-refactoring-high-performance/SKILL.md",
+      "computedHash": "43057582a1188bbf0372349ce815baba29c87ad57251e09a57a08b1c1b9c894d"
+    },
+    "170-java-documentation": {
+      "source": "jabrena/plinth",
+      "sourceType": "github",
+      "skillPath": "skills/170-java-documentation/SKILL.md",
+      "computedHash": "1b992c9f0558996822c9f6e6bd59f6f67531e1c3753ab43fe9e4523c2588bd9f"
+    },
+    "clean-code": {
+      "source": "wondelai/skills",
+      "sourceType": "github",
+      "skillPath": "clean-code/SKILL.md",
+      "computedHash": "af6b8adde1281493c8a55d5505efc739a2a5ed851ca467b7b6d35c2d2b2f9cea"
+    },
+    "find-skills": {
+      "source": "vercel-labs/skills",
+      "sourceType": "github",
+      "skillPath": "skills/find-skills/SKILL.md",
+      "computedHash": "b146008599c31057cef1c145774cea5d5afb30e8f43fa802e47a4b461419aaaf"
+    },
+    "java-junit": {
+      "source": "github/awesome-copilot",
+      "sourceType": "github",
+      "skillPath": "skills/java-junit/SKILL.md",
+      "computedHash": "092bc94008ad8aac39a625aa53d05852063c21d295c30a2515c348ce2e64fe49"
+    },
+    "java-refactoring-extract-method": {
+      "source": "github/awesome-copilot",
+      "sourceType": "github",
+      "skillPath": "skills/java-refactoring-extract-method/SKILL.md",
+      "computedHash": "12936ca4b21c2dee1e01910e01c9e34365a7c30b05b6145727ce8ca5ff3ec4a2"
+    },
+    "refactoring-patterns": {
+      "source": "wondelai/skills",
+      "sourceType": "github",
+      "skillPath": "refactoring-patterns/SKILL.md",
+      "computedHash": "5372f40d0b83f20713f7cb8436466280e234cc1b2a5e3c956ece457724c7b3a4"
+    }
+  }
+}

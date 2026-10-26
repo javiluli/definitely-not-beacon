@@ -1,0 +1,6 @@
+{
+    "Spawners": [ { "SpawnerId": "Beacon_Core_Pulse" } ],
+    "CullDistance": 24,
+    "BoundingRadius": 1,
+    "IsImportant": false
+}
