@@ -30,6 +30,8 @@ final class BeaconParticles {
     static final double VIEW_DISTANCE = 150d;
     static final int REFRESH_TICKS = 140;
     static final float EFFECT_DURATION = 8f;
+    /** Eleva el efecto completo 0,65 bloques sobre su anclaje anterior. */
+    static final double VISUAL_Y_ADJUSTMENT = 0.65d;
 
     /** Cada mundo posee su propio mapa de espectadores y el último color enviado. */
     private final Map<BeaconStructures.Position, Map<UUID, Emission>> sent = new HashMap<>();
@@ -52,7 +54,7 @@ final class BeaconParticles {
         float actualHeight = profile.heightAt(WIDTH);
         String base = BeaconFxAssets.tintedBase(BASE_ROTATION);
         for (var position : active) {
-            Vector3d origin = new Vector3d(position.x() + 0.5, position.y() + 0.1, position.z() + 0.5);
+            Vector3d origin = origin(position);
             Map<UUID, Emission> byPlayer = sent.computeIfAbsent(position, ignored -> new HashMap<>());
             Set<UUID> currentViewers = new HashSet<>();
             // El color se consulta una sola vez por renovación y Beacon, no por espectador.
@@ -81,6 +83,11 @@ final class BeaconParticles {
             // Al salir del alcance deja de renovar la emisión; un retorno genera el efecto de inmediato.
             byPlayer.keySet().retainAll(currentViewers);
         }
+    }
+
+    /** Ancla la base y el haz juntos, sin cambiar su tamaño ni sus colores. */
+    static Vector3d origin(BeaconStructures.Position position) {
+        return new Vector3d(position.x() + 0.5, position.y() + 0.1 + VISUAL_Y_ADJUSTMENT, position.z() + 0.5);
     }
 
     /** Evita duplicados durante el intervalo de vida de las partículas. */
