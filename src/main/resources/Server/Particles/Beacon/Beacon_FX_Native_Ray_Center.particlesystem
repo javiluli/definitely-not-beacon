@@ -1,0 +1,14 @@
+{
+  "Spawners": [
+    {
+      "SpawnerId": "Drop_Legendary_Ray_Center",
+      "StartDelay": 0,
+      "PositionOffset": {
+        "Y": 1.1
+      }
+    }
+  ],
+  "CullDistance": 128,
+  "BoundingRadius": 8,
+  "IsImportant": true
+}
