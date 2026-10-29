@@ -10,6 +10,7 @@ import dev.hytalemodding.beacon.BeaconBeamRotationSystem;
 import dev.hytalemodding.beacon.BeaconBeamModels;
 import dev.hytalemodding.beacon.BeaconCrystals;
 import dev.hytalemodding.beacon.BeaconEffects;
+import dev.hytalemodding.beacon.BeaconFxCommand;
 import dev.hytalemodding.beacon.BeaconMiningSystem;
 import dev.hytalemodding.beacon.BeaconOpenInteraction;
 import dev.hytalemodding.beacon.BeaconPower;
@@ -40,6 +41,7 @@ public class DefinitelyNotBeaconPlugin extends JavaPlugin {
     @Override
     protected void setup() {
         BeaconSelection.register(this);
+        getCommandRegistry().registerCommand(new BeaconFxCommand());
         getCodecRegistry(Interaction.CODEC).register("Beacon_Open", BeaconOpenInteraction.class, BeaconOpenInteraction.CODEC);
         getEntityStoreRegistry().registerSystem(new BeaconStatusSystem());
         getEntityStoreRegistry().registerSystem(new BeaconBeamRotationSystem());
