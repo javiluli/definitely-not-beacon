@@ -15,7 +15,7 @@ class BeaconParticlesTest {
         assertEquals(71d, origin.y, 0.0001d);
         assertEquals(-3.5d, origin.z, 0.0001d);
         assertEquals(0.90d, BeaconParticles.VISUAL_Y_ADJUSTMENT, 0.0001d);
-        assertEquals(72.7d, BeaconParticles.footCenterY(origin.y), 0.0001d);
+        assertEquals(74.5d, BeaconParticles.footCenterY(origin.y), 0.0001d);
     }
 
     @Test
@@ -27,6 +27,9 @@ class BeaconParticlesTest {
         assertTrue(foot.heightAt(BeaconParticles.FOOT_WIDTH) < main.heightAt(BeaconParticles.WIDTH));
         assertTrue(BeaconParticles.FOOT_WIDTH < BeaconParticles.WIDTH);
         assertTrue(BeaconParticles.FOOT_BRIGHTNESS < BeaconParticles.BRIGHTNESS);
+        // El borde inferior del sprite de apoyo no debe quedar hundido bajo la apertura.
+        assertTrue(BeaconParticles.FOOT_CENTER_ABOVE_BASE
+                - foot.heightAt(BeaconParticles.FOOT_WIDTH) / 2f >= -0.5d);
     }
 
     @Test
