@@ -17,6 +17,8 @@ final class BeaconWorldState implements Resource<EntityStore> {
     /** Impulso base y último valor aplicado para no acumular el multiplicador de Salto. */
     final Map<Ref<EntityStore>, Jump> jumps = new HashMap<>();
     final BeaconBeam beams = new BeaconBeam();
+    /** Haz de partículas por espectadores, solo en mundos activos. */
+    final BeaconParticles particles = new BeaconParticles();
     /** Cada mundo conserva su propio reloj; el primer tick descubre las bases inmediatamente. */
     float powerElapsed = 1f;
 
