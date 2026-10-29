@@ -28,7 +28,7 @@
     "UVOption": "None",
     "SoftParticles": "Disable",
     "InitialAnimationFrame": {
-      "Opacity": 0.85,
+      "Opacity": 0.94,
       "Scale": {
         "X": {
           "Min": 1,
