@@ -39,6 +39,8 @@ public final class BeaconFxCommand extends AbstractCommandCollection {
         addSubCommand(new Center());
         addSubCommand(new Polish());
         addSubCommand(new Tune());
+        addSubCommand(new Custom());
+        addSubCommand(new CustomAlign());
     }
 
     /** Traduce colores comunes o un hexadecimal; 'native' conserva el color definido por el asset. */
@@ -341,6 +343,90 @@ public final class BeaconFxCommand extends AbstractCommandCollection {
             } catch (IllegalArgumentException error) {
                 context.sendMessage(Message.raw(error.getMessage()));
             }
+        }
+    }
+
+    /** Usa los perfiles Java sin offsets manuales y conserva el anillo coloreado original. */
+    static float automaticOffset(float actualHeight) {
+        return -actualHeight / 8f;
+    }
+
+    /** Selecciona los assets publicados una sola vez al iniciar el plugin. */
+    private static void previewCustom(CommandContext context, Store<EntityStore> store, Ref<EntityStore> player,
+                                      float height, float width, String colorName, float brightness,
+                                      float baseScale, float rotationSpeed, Float requestedOffset) {
+        if (!validDimensions(height, width) || !validBaseScale(baseScale)
+                || !BeaconFxAssets.validRotationSpeed(rotationSpeed)) {
+            context.sendMessage(Message.raw("Altura 4-128, ancho 0.2-2, base 0.5-1.5, giro 0.25-1."));
+            return;
+        }
+        if (!BeaconFxProfiles.available()) {
+            context.sendMessage(Message.raw("Los perfiles Java no se cargaron. Revisa el log del servidor; sigue disponible /beaconfx tune."));
+            return;
+        }
+        try {
+            Color tint = color(colorName);
+            BeaconFxProfiles.Profile profile = BeaconFxProfiles.select(height, width, brightness);
+            float actualHeight = profile.heightAt(width);
+            float offset = requestedOffset == null ? automaticOffset(actualHeight) : requestedOffset;
+            if (!Float.isFinite(offset) || Math.abs(offset) > 128f) {
+                context.sendMessage(Message.raw("Offset vertical permitido: -128 a 128 bloques."));
+                return;
+            }
+            Vector3d pos = store.getComponent(player, TransformComponent.getComponentType()).getPosition();
+            String base = tint != null ? BeaconFxAssets.tintedBase(rotationSpeed) : "Beacon_FX_Legendary_Base";
+            spawn(base, new Vector3d(pos), baseScale, tint, player, store);
+            Vector3d center = new Vector3d(pos.x, centerY(pos.y, actualHeight, offset), pos.z);
+            spawn(profile.assetId(), center, width, tint, player, store);
+            reportTintStatus(context, tint);
+            context.sendMessage(Message.raw(String.format(Locale.ROOT,
+                    "Java FX: alto %.2f (pedido %.2f), ancho %.2f, brillo %.2f, base %.2f, giro pedido %.2f, offset %+.2f.",
+                    actualHeight, height, width, profile.brightness(), baseScale, rotationSpeed, offset)));
+        } catch (IllegalArgumentException error) {
+            context.sendMessage(Message.raw(error.getMessage()));
+        }
+    }
+
+    /** Vista parametrizada con desplazamiento automático hacia la base. */
+    private static final class Custom extends AbstractPlayerCommand {
+        private final RequiredArg<Float> height = withRequiredArg("height", "Altura entre 4 y 128", ArgTypes.FLOAT);
+        private final RequiredArg<Float> width = withRequiredArg("width", "Anchura entre 0.2 y 2", ArgTypes.FLOAT);
+        private final RequiredArg<String> tint = withRequiredArg("color", "Color o RRGGBB", ArgTypes.STRING);
+        private final RequiredArg<Float> brightness = withRequiredArg("brightness", "Brillo entre 0.5 y 1", ArgTypes.FLOAT);
+        private final RequiredArg<Float> base = withRequiredArg("baseScale", "Tamano de base entre 0.5 y 1.5", ArgTypes.FLOAT);
+        private final RequiredArg<Float> speed = withRequiredArg("rotationSpeed", "Velocidad del anillo entre 0.25 y 1", ArgTypes.FLOAT);
+
+        Custom() {
+            super("custom", "Prueba un haz creado desde Java con brillo y giro configurables");
+        }
+
+        @Override
+        protected void execute(@Nonnull CommandContext context, @Nonnull Store<EntityStore> store,
+                               @Nonnull Ref<EntityStore> ref, @Nonnull PlayerRef playerRef, @Nonnull World world) {
+            previewCustom(context, store, ref, height.get(context), width.get(context), tint.get(context),
+                    brightness.get(context), base.get(context), speed.get(context), null);
+        }
+    }
+
+    /** Mismos parámetros, con control explícito del anclaje vertical para comparar visualmente. */
+    private static final class CustomAlign extends AbstractPlayerCommand {
+        private final RequiredArg<Float> height = withRequiredArg("height", "Altura entre 4 y 128", ArgTypes.FLOAT);
+        private final RequiredArg<Float> width = withRequiredArg("width", "Anchura entre 0.2 y 2", ArgTypes.FLOAT);
+        private final RequiredArg<String> tint = withRequiredArg("color", "Color o RRGGBB", ArgTypes.STRING);
+        private final RequiredArg<Float> brightness = withRequiredArg("brightness", "Brillo entre 0.5 y 1", ArgTypes.FLOAT);
+        private final RequiredArg<Float> base = withRequiredArg("baseScale", "Tamano de base entre 0.5 y 1.5", ArgTypes.FLOAT);
+        private final RequiredArg<Float> speed = withRequiredArg("rotationSpeed", "Velocidad del anillo entre 0.25 y 1", ArgTypes.FLOAT);
+        private final RequiredArg<Float> offset = withRequiredArg("offset", "Desplazamiento vertical -128..128", ArgTypes.FLOAT);
+
+        CustomAlign() {
+            super("customalign", "Como custom, pero con offset vertical elegido por el jugador");
+        }
+
+        @Override
+        protected void execute(@Nonnull CommandContext context, @Nonnull Store<EntityStore> store,
+                               @Nonnull Ref<EntityStore> ref, @Nonnull PlayerRef playerRef, @Nonnull World world) {
+            previewCustom(context, store, ref, height.get(context), width.get(context), tint.get(context),
+                    brightness.get(context), base.get(context), speed.get(context), offset.get(context));
         }
     }
 
