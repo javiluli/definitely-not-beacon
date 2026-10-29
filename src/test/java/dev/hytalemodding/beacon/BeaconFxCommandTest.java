@@ -31,6 +31,12 @@ class BeaconFxCommandTest {
     }
 
     @Test
+    void automaticAlignmentMatchesTheSuccessfulPreset() {
+        assertEquals(-5f, BeaconFxCommand.automaticOffset(40f), 0.0001f);
+        assertEquals(-5.2f, BeaconFxCommand.automaticOffset(41.6f), 0.001f);
+    }
+
+    @Test
     void parsesColorsAndNativeOption() {
         assertNull(BeaconFxCommand.color("native"));
         var cyan = BeaconFxCommand.color("cyan");
