@@ -93,11 +93,20 @@ public final class BeaconFxCommand extends AbstractCommandCollection {
         Vector3d position = store.getComponent(player, TransformComponent.getComponentType()).getPosition();
         if (decoration) {
             // Los adornos de Drop_Legendary mantienen su escala original, sin los dos rayos vanilla.
-            spawn("Beacon_FX_Legendary_Base", new Vector3d(position), 1f, null, player, store);
+            String base = tint != null && BeaconFxAssets.available()
+                    ? BeaconFxAssets.TINTED_BASE : "Beacon_FX_Legendary_Base";
+            spawn(base, new Vector3d(position), 1f, tint, player, store);
         }
         Vector3d middle = new Vector3d(position.x, centerY(position.y, actualHeight, verticalOffset), position.z);
         spawn("Beacon_FX_Ray_" + selectedRatio, middle, width, tint, player, store);
         return actualHeight;
+    }
+
+    /** Mensaje de diagnóstico si falló la carga de la variante recoloreable. */
+    private static void reportTintStatus(CommandContext context, Color tint) {
+        if (tint != null && !BeaconFxAssets.available()) {
+            context.sendMessage(Message.raw("La base personalizada no se pudo cargar; se usa la amarilla original. Revisa el log."));
+        }
     }
 
     /** Rechaza tamaños no finitos o fuera de los límites de pruebas. */
@@ -186,6 +195,7 @@ public final class BeaconFxCommand extends AbstractCommandCollection {
             try {
                 Color color = color(tint.get(context));
                 float actualHeight = previewRay(h, w, color, true, ref, store);
+                reportTintStatus(context, color);
                 context.sendMessage(Message.raw(String.format(Locale.ROOT,
                         "Base legendaria al 100%%, rayo %.1f x %.2f, color %s (8 s).",
                         actualHeight, w, tint.get(context))));
@@ -217,7 +227,9 @@ public final class BeaconFxCommand extends AbstractCommandCollection {
                 return;
             }
             try {
-                float actual = previewRay(h, w, color(tint.get(context)), true, shift, ref, store);
+                Color selectedColor = color(tint.get(context));
+                float actual = previewRay(h, w, selectedColor, true, shift, ref, store);
+                reportTintStatus(context, selectedColor);
                 context.sendMessage(Message.raw(String.format(Locale.ROOT,
                         "Anclaje: altura solicitada %.1f, altura estimada %.1f, offset Y %+.1f. "
                                 + "Es una calibracion visual, no modifica los assets.", h, actual, shift)));
