@@ -65,7 +65,7 @@ final class BeaconParticles {
                 UUID id = player.getUuid();
                 currentViewers.add(id);
                 Emission previous = byPlayer.get(id);
-                if (previous != null && tick - previous.tick() < REFRESH_TICKS) continue;
+                if (previous != null && !shouldRefresh(tick, previous.tick())) continue;
                 if (rgb == null) rgb = tint(position, store);
                 Color color = rgb < 0 ? null : new Color((byte) (rgb >> 16), (byte) (rgb >> 8), (byte) (int) rgb);
                 var recipients = List.of(reference);
@@ -81,6 +81,11 @@ final class BeaconParticles {
             // Al salir del alcance deja de renovar la emisión; un retorno genera el efecto de inmediato.
             byPlayer.keySet().retainAll(currentViewers);
         }
+    }
+
+    /** Evita duplicados durante el intervalo de vida de las partículas. */
+    static boolean shouldRefresh(long tick, long previousTick) {
+        return tick < previousTick || tick - previousTick >= REFRESH_TICKS;
     }
 
     /** Distancia horizontal; un haz alto sigue viéndose desde alturas distintas. */
