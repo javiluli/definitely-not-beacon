@@ -204,7 +204,7 @@ public final class BeaconFxAssets {
                 }
             }
         } else if (value.isArray()) {
-            for (BsonValue child : value.asArray()) scaled += slowTangentialMotion(child);
+            for (BsonValue child : value.asArray()) scaled += slowTangentialMotion(child, speed);
         }
         return scaled;
     }
