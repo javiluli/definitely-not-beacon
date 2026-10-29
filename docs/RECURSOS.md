@@ -117,10 +117,16 @@ el laboratorio lo informa y no afecta a las mecánicas originales. Compila con
 poderes sin cambios. Cada `BeaconWorldState` conserva un `BeaconParticles`:
 solo emite cuando la estructura está activa y hay espectadores a un máximo de 150
 bloques horizontales; renueva el haz como mucho cada siete segundos por jugador.
-Crea un único núcleo y una base por renovación, con el preset visual 40 / 0.65 /
-0.94 / 0.85 / 0.5. El color procede de la última mezcla de cristales encontrada
-en la columna; sin cristales se mantiene el color nativo. Los cambios de color
-se aplican en la siguiente renovación, sin generar nuevas variantes RGB.
+Crea un núcleo, una pequeña zona de refuerzo inferior y una base por renovación,
+con el preset visual 40 / 0.65 / 0.94 / 0.85 / 0.5. El origen de la base está en
+Y + 1.0 respecto al bloque y el refuerzo de 8 bloques se centra 3.5 bloques
+por encima de esa apertura, evitando que el sprite se hunda bajo el Beacon.
+El color procede de la última mezcla de cristales encontrada
+en la columna; sin cristales o solo con cristales blancos se mantiene el color
+nativo. El mismo RGB se envía a la base, el núcleo y el refuerzo inferior.
+La mezcla es global para el haz de partículas, no se recrean tramos de degradado
+entre cristales como hacía el modelo previo. Los cambios de color
+se aplican en la siguiente renovación (hasta siete segundos), sin generar nuevas variantes RGB.
 
 **Limitación experimental:** `ParticleUtil` envía efectos temporales, no entidades
 que puedan retirarse inmediatamente. Al desactivar, retirar la base o descargar el
