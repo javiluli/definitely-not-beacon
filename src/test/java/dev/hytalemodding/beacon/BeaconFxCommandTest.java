@@ -49,4 +49,22 @@ class BeaconFxCommandTest {
         }
     }
 
+    @Test
+    void verticalOffsetMovesOnlyTheBeamCenter() {
+        assertEquals(80.05d, BeaconFxCommand.centerY(64, 32, 0), 0.0001d);
+        assertEquals(72.05d, BeaconFxCommand.centerY(64, 32, -8), 0.0001d);
+        assertEquals(88.05d, BeaconFxCommand.centerY(64, 32, 8), 0.0001d);
+    }
+
+    @Test
+    void nativeCenterReferencesOnlyTheOriginalRay() throws Exception {
+        try (var stream = BeaconFxCommandTest.class.getResourceAsStream(
+                "/Server/Particles/Beacon/Beacon_FX_Native_Ray_Center.particlesystem")) {
+            assertNotNull(stream);
+            String json = new String(stream.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+            assertTrue(json.contains("Drop_Legendary_Ray_Center"));
+            assertFalse(json.contains("Drop_Legendary_Ground"));
+        }
+    }
+
 }
