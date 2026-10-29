@@ -67,4 +67,19 @@ class BeaconFxAssetsTest {
         assertEquals(0, BeaconFxAssets.slowGroundRotation(original));
         assertEquals(1, original.getDocument("ParticleLifeSpan").getInt32("Min").getValue());
     }
+    @Test
+    void scalesOtherGroundRotationsWithoutChangingLinearMovement() {
+        BsonDocument data = BsonDocument.parse("""
+                {"Attractors": [{"RadialTangentAcceleration": 8, "LinearAcceleration": {"Y": 4}}]}
+                """);
+        assertEquals(1, BeaconFxAssets.slowGroundRotation(data, 0.75));
+        BsonDocument force = data.getArray("Attractors").get(0).asDocument();
+        assertEquals(6d, force.getDouble("RadialTangentAcceleration").getValue(), 0.001);
+        assertEquals(4, force.getDocument("LinearAcceleration").getInt32("Y").getValue());
+        assertTrue(BeaconFxAssets.validRotationSpeed(0.35f));
+        assertTrue(BeaconFxAssets.validRotationSpeed(0.75f));
+        assertFalse(BeaconFxAssets.validRotationSpeed(1.5f));
+        assertFalse(BeaconFxAssets.validRotationSpeed(Float.NaN));
+    }
+
 }
