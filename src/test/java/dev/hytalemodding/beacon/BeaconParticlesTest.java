@@ -8,6 +8,16 @@ import static org.junit.jupiter.api.Assertions.*;
 /** Contratos independientes del cliente para la activación visual. */
 class BeaconParticlesTest {
     @Test
+    void raisesBothBeamAndBaseWithoutChangingTheHorizontalCenter() {
+        var position = new BeaconStructures.Position(12, 70, -4);
+        Vector3d origin = BeaconParticles.origin(position);
+        assertEquals(12.5d, origin.x, 0.0001d);
+        assertEquals(70.75d, origin.y, 0.0001d);
+        assertEquals(-3.5d, origin.z, 0.0001d);
+        assertEquals(0.65d, BeaconParticles.VISUAL_Y_ADJUSTMENT, 0.0001d);
+    }
+
+    @Test
     void keepsAViewerInRangeWithoutCheckingVerticalDistance() {
         Vector3d beacon = new Vector3d(0.5, 90, 0.5);
         assertTrue(BeaconParticles.visible(beacon, new Vector3d(0.5, 180, 0.5)));
