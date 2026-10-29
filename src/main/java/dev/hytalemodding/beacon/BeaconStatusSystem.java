@@ -45,8 +45,16 @@ public final class BeaconStatusSystem extends DelayedSystem<EntityStore> {
             state.powerElapsed %= 1f;
             state.levels = Map.copyOf(BeaconStructures.findActive(store.getExternalData().getWorld().getChunkStore()));
             updatePlayers(state, store);
-            state.beams.update(state.levels.keySet(), store);
-        } else {
+            if (BeaconParticles.ready()) {
+                // Los modelos anteriores se retiran al activar el nuevo renderizador.
+                state.beams.update(java.util.Set.of(), store);
+                state.particles.update(state.levels.keySet(), store);
+            } else {
+                // Fallback si falla la carga de partículas en Hytale 0.7.4.
+                state.beams.update(state.levels.keySet(), store);
+                state.particles.update(java.util.Set.of(), store);
+            }
+        } else if (!BeaconParticles.ready()) {
             state.beams.updateColors(store);
         }
     }
