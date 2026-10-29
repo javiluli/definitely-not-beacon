@@ -66,18 +66,24 @@ public final class BeaconFxProfiles {
             String pack = ParticleSystem.getAssetMap().getAssetPack("Beacon_FX_Legendary_Base");
             if (pack == null) throw new IllegalStateException("Missing particle asset pack");
             List<ParticleSpawner> spawners = new ArrayList<>();
-            List<ParticleSystem> systems = new ArrayList<>();
             for (int ratio : RATIOS) {
                 for (float brightness : BRIGHTNESS) {
                     String id = id(ratio, brightness);
-                    String spawnerId = id + "_Spawner";
-                    spawners.add(ParticleSpawner.getAssetStore().decode(pack, spawnerId, spawner(ratio, brightness)));
-                    systems.add(ParticleSystem.getAssetStore().decode(pack, id, system(spawnerId, ratio)));
+                    spawners.add(ParticleSpawner.getAssetStore().decode(
+                            pack, id + "_Spawner", spawner(ratio, brightness)));
                 }
             }
             var result = ParticleSpawner.getAssetStore().loadAssets(pack, spawners);
             if (result.hasFailed()) throw new IllegalStateException(
                     "Failed to load ray spawners: " + result.getFailedToLoadKeys());
+            // Resolver las referencias solo despues de registrar los emisores.
+            List<ParticleSystem> systems = new ArrayList<>();
+            for (int ratio : RATIOS) {
+                for (float brightness : BRIGHTNESS) {
+                    String id = id(ratio, brightness);
+                    systems.add(ParticleSystem.getAssetStore().decode(pack, id, system(id + "_Spawner", ratio)));
+                }
+            }
             var systemsResult = ParticleSystem.getAssetStore().loadAssets(pack, systems);
             if (systemsResult.hasFailed()) throw new IllegalStateException(
                     "Failed to load ray systems: " + systemsResult.getFailedToLoadKeys());
