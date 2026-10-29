@@ -34,7 +34,7 @@ final class BeaconParticles {
     /** Cada mundo posee su propio mapa de espectadores y el último color enviado. */
     private final Map<BeaconStructures.Position, Map<UUID, Emission>> sent = new HashMap<>();
 
-    private record Emission(long tick, int rgb) {}
+    private record Emission(long tick) {}
 
     /** Solo se habilita cuando tanto el haz como la base recoloreable se cargaron. */
     static boolean ready() {
@@ -76,7 +76,7 @@ final class BeaconParticles {
                                 BeaconFxCommand.automaticOffset(actualHeight)), origin.z);
                 ParticleUtil.spawnParticleEffect(profile.assetId(), beamOrigin.x, beamOrigin.y, beamOrigin.z,
                         0f, 0f, 0f, WIDTH, color, null, recipients, store, EFFECT_DURATION);
-                byPlayer.put(id, new Emission(tick, rgb));
+                byPlayer.put(id, new Emission(tick));
             }
             // Al salir del alcance deja de renovar la emisión; un retorno genera el efecto de inmediato.
             byPlayer.keySet().retainAll(currentViewers);
