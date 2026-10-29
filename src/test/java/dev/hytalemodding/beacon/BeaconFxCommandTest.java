@@ -14,6 +14,23 @@ class BeaconFxCommandTest {
     }
 
     @Test
+    void allowsIndependentBaseSizingWithinSafeRange() {
+        assertTrue(BeaconFxCommand.validBaseScale(0.85f));
+        assertTrue(BeaconFxCommand.validBaseScale(1f));
+        assertFalse(BeaconFxCommand.validBaseScale(0.3f));
+        assertFalse(BeaconFxCommand.validBaseScale(2f));
+        assertFalse(BeaconFxCommand.validBaseScale(Float.NaN));
+        assertFalse(BeaconFxCommand.validBaseScale(Float.POSITIVE_INFINITY));
+    }
+
+    @Test
+    void tunedWidthSelectsApproximateHeightWithoutUnexpectedScaling() {
+        assertEquals(64, BeaconFxCommand.ratio(40f / 0.65f));
+        assertEquals(41.6f, BeaconFxCommand.ratio(40f / 0.65f) * 0.65f, 0.001f);
+        assertEquals(35.85d, BeaconFxCommand.centerY(20, 41.6f, -5f), 0.001d);
+    }
+
+    @Test
     void parsesColorsAndNativeOption() {
         assertNull(BeaconFxCommand.color("native"));
         var cyan = BeaconFxCommand.color("cyan");
@@ -32,6 +49,7 @@ class BeaconFxCommandTest {
                 String json = new String(stream.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
                 assertFalse(json.contains("\"Color\""), "El color fijo anula el tintado Java: " + ratio);
                 assertTrue(json.contains("BlendLinear"), "El modo aditivo puede blanquear el color: " + ratio);
+                assertTrue(json.contains("\"Opacity\": 0.94"), "Brillo moderado del haz: " + ratio);
             }
         }
     }
