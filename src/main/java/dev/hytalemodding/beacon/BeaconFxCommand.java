@@ -24,6 +24,10 @@ import java.util.Locale;
 /** Laboratorio aislado de partículas. No altera la representación normal del Beacon. */
 public final class BeaconFxCommand extends AbstractCommandCollection {
     private static final float PREVIEW_SECONDS = 8f;
+    private static final float POLISHED_HEIGHT = 40f;
+    private static final float POLISHED_WIDTH = 0.65f;
+    private static final float POLISHED_OFFSET = -5f;
+    private static final float POLISHED_BASE_SCALE = 0.85f;
     private static final int[] RATIOS = {16, 32, 48, 64, 80, 96, 128, 160, 256, 384, 512, 640};
 
     public BeaconFxCommand() {
@@ -33,6 +37,8 @@ public final class BeaconFxCommand extends AbstractCommandCollection {
         addSubCommand(new Legendary());
         addSubCommand(new Align());
         addSubCommand(new Center());
+        addSubCommand(new Polish());
+        addSubCommand(new Tune());
     }
 
     /** Traduce colores comunes o un hexadecimal; 'native' conserva el color definido por el asset. */
@@ -82,12 +88,18 @@ public final class BeaconFxCommand extends AbstractCommandCollection {
     /** Vista habitual: conserva el anclaje original como referencia visual. */
     private static float previewRay(float height, float width, Color tint, boolean decoration,
                                     Ref<EntityStore> player, Store<EntityStore> store) {
-        return previewRay(height, width, tint, decoration, 0f, player, store);
+        return previewRay(height, width, tint, decoration, 0f, 1f, player, store);
     }
 
-    /** Vista con ajuste vertical, sin modificar la altura ni la base del efecto. */
+    /** Vista con ajuste vertical, conservando la escala de base original. */
     private static float previewRay(float height, float width, Color tint, boolean decoration,
                                     float verticalOffset, Ref<EntityStore> player, Store<EntityStore> store) {
+        return previewRay(height, width, tint, decoration, verticalOffset, 1f, player, store);
+    }
+
+    /** Mantiene independientes la escala de la base, el grosor del rayo y el anclaje vertical. */
+    private static float previewRay(float height, float width, Color tint, boolean decoration,
+                                    float verticalOffset, float baseScale, Ref<EntityStore> player, Store<EntityStore> store) {
         int selectedRatio = ratio(height / width);
         float actualHeight = selectedRatio * width;
         Vector3d position = store.getComponent(player, TransformComponent.getComponentType()).getPosition();
@@ -95,7 +107,7 @@ public final class BeaconFxCommand extends AbstractCommandCollection {
             // Los adornos de Drop_Legendary mantienen su escala original, sin los dos rayos vanilla.
             String base = tint != null && BeaconFxAssets.available()
                     ? BeaconFxAssets.TINTED_BASE : "Beacon_FX_Legendary_Base";
-            spawn(base, new Vector3d(position), 1f, tint, player, store);
+            spawn(base, new Vector3d(position), baseScale, tint, player, store);
         }
         Vector3d middle = new Vector3d(position.x, centerY(position.y, actualHeight, verticalOffset), position.z);
         spawn("Beacon_FX_Ray_" + selectedRatio, middle, width, tint, player, store);
@@ -107,6 +119,11 @@ public final class BeaconFxCommand extends AbstractCommandCollection {
         if (tint != null && !BeaconFxAssets.available()) {
             context.sendMessage(Message.raw("La base personalizada no se pudo cargar; se usa la amarilla original. Revisa el log."));
         }
+    }
+
+    /** Rango de escala prudente para que el anillo no tape el haz ni crezca sin control. */
+    static boolean validBaseScale(float baseScale) {
+        return Float.isFinite(baseScale) && baseScale >= 0.5f && baseScale <= 1.5f;
     }
 
     /** Rechaza tamaños no finitos o fuera de los límites de pruebas. */
@@ -259,6 +276,68 @@ public final class BeaconFxCommand extends AbstractCommandCollection {
             try {
                 spawn("Beacon_FX_Native_Ray_Center", new Vector3d(position), size, null, ref, store);
                 context.sendMessage(Message.raw("Rayo central original: escala uniforme, sin tintado forzado."));
+            } catch (IllegalArgumentException error) {
+                context.sendMessage(Message.raw(error.getMessage()));
+            }
+        }
+    }
+
+    /** Preset conservador: brillo mayor, base un poco menor y menos rayo bajo el suelo. */
+    private static final class Polish extends AbstractPlayerCommand {
+        private final RequiredArg<String> tint = withRequiredArg("color", "Color o hexadecimal", ArgTypes.STRING);
+
+        Polish() {
+            super("polish", "Prueba el acabado afinado, conservando el estilo anterior");
+        }
+
+        @Override
+        protected void execute(@Nonnull CommandContext context, @Nonnull Store<EntityStore> store,
+                               @Nonnull Ref<EntityStore> ref, @Nonnull PlayerRef playerRef, @Nonnull World world) {
+            try {
+                Color selected = color(tint.get(context));
+                float actual = previewRay(POLISHED_HEIGHT, POLISHED_WIDTH, selected, true,
+                        POLISHED_OFFSET, POLISHED_BASE_SCALE, ref, store);
+                reportTintStatus(context, selected);
+                context.sendMessage(Message.raw(String.format(Locale.ROOT,
+                        "Acabado: haz ~%.1f alto / %.2f ancho; offset %+.1f; base %.2f (8 s).",
+                        actual, POLISHED_WIDTH, POLISHED_OFFSET, POLISHED_BASE_SCALE)));
+            } catch (IllegalArgumentException error) {
+                context.sendMessage(Message.raw(error.getMessage()));
+            }
+        }
+    }
+
+    /** Controles independientes para comparar ajustes sin recompilar el mod. */
+    private static final class Tune extends AbstractPlayerCommand {
+        private final RequiredArg<Float> height = withRequiredArg("height", "Altura de 4 a 128 bloques", ArgTypes.FLOAT);
+        private final RequiredArg<Float> width = withRequiredArg("width", "Anchura de 0.2 a 2 bloques", ArgTypes.FLOAT);
+        private final RequiredArg<String> tint = withRequiredArg("color", "Color o hexadecimal", ArgTypes.STRING);
+        private final RequiredArg<Float> offset = withRequiredArg("offset", "Desplazamiento vertical de -128 a 128", ArgTypes.FLOAT);
+        private final RequiredArg<Float> baseScale = withRequiredArg("baseScale", "Escala independiente de base: 0.5 a 1.5", ArgTypes.FLOAT);
+
+        Tune() {
+            super("tune", "Ajusta altura y anchura del haz, desplazamiento y tamaño de la base");
+        }
+
+        @Override
+        protected void execute(@Nonnull CommandContext context, @Nonnull Store<EntityStore> store,
+                               @Nonnull Ref<EntityStore> ref, @Nonnull PlayerRef playerRef, @Nonnull World world) {
+            float h = height.get(context);
+            float w = width.get(context);
+            float shift = offset.get(context);
+            float base = baseScale.get(context);
+            if (!validDimensions(h, w) || !validBaseScale(base)
+                    || !Float.isFinite(shift) || Math.abs(shift) > 128f) {
+                context.sendMessage(Message.raw("Altura 4-128, ancho 0.2-2, offset -128..128, base 0.5-1.5."));
+                return;
+            }
+            try {
+                Color selected = color(tint.get(context));
+                float actual = previewRay(h, w, selected, true, shift, base, ref, store);
+                reportTintStatus(context, selected);
+                context.sendMessage(Message.raw(String.format(Locale.ROOT,
+                        "Ajuste: haz solicitado %.1f (real aprox. %.1f), ancho %.2f, offset %+.1f, base %.2f (8 s).",
+                        h, actual, w, shift, base)));
             } catch (IllegalArgumentException error) {
                 context.sendMessage(Message.raw(error.getMessage()));
             }
