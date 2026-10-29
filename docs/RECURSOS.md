@@ -84,7 +84,8 @@ El asset nativo [Beam](https://docs.hytale.com/assets/entity/beams/) de 0.7.4 de
 
 ## Laboratorio experimental de partículas (rama `experiment/beacon-particles`)
 
-El laboratorio `/beaconfx` no reemplaza todavía el haz principal del Beacon. La base se
+En esta rama el Beacon activo utiliza ahora el haz de partículas generado en Java,
+mientras que el modelo anterior queda como respaldo si falla la carga de assets. La base se
 publica en memoria desde `BeaconFxAssets`, copiando los emisores nativos de
 `Drop_Legendary`, retirando sus colores fijados y preparando cuatro velocidades de
 rotación. `BeaconFxProfiles` publica 29 relaciones alto/ancho y tres opacidades
@@ -109,6 +110,25 @@ perfil precalculado; el giro se aproxima a las velocidades registradas 0.35,
 hasta que se pruebe en el cliente la publicación dinámica. Si no se cargan perfiles,
 el laboratorio lo informa y no afecta a las mecánicas originales. Compila con
 `./gradlew build` y reinicia completamente Hytale para actualizar assets.
+
+### Integración con el Beacon activo
+
+`BeaconStatusSystem` sigue detectando las pirámides y mantiene las mecánicas de
+poderes sin cambios. Cada `BeaconWorldState` conserva un `BeaconParticles`:
+solo emite cuando la estructura está activa y hay espectadores a un máximo de 150
+bloques horizontales; renueva el haz como mucho cada siete segundos por jugador.
+Crea un único núcleo y una base por renovación, con el preset visual 40 / 0.65 /
+0.94 / 0.85 / 0.5. El color procede de la última mezcla de cristales encontrada
+en la columna; sin cristales se mantiene el color nativo. Los cambios de color
+se aplican en la siguiente renovación, sin generar nuevas variantes RGB.
+
+**Limitación experimental:** `ParticleUtil` envía efectos temporales, no entidades
+que puedan retirarse inmediatamente. Al desactivar, retirar la base o descargar el
+chunk, no se crean emisiones nuevas, pero las ya enviadas pueden permanecer hasta
+ocho segundos. Si la prueba con cliente requiere desaparición instantánea, habrá
+que migrar estas partículas a un efecto unido a una entidad con
+`ClearParticlesOnRemove`. No se debe anunciar limpieza instantánea mientras se use
+el sistema de envíos temporal.
 
 ## Comprobación con cliente
 
