@@ -12,6 +12,8 @@ import org.bson.BsonValue;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.logging.Level;
 
 /** Publica variantes en memoria de los efectos originales sin nuevos archivos ni texturas. */
@@ -21,6 +23,8 @@ public final class BeaconFxAssets {
     private static final String PREFIX = "Drop_Legendary_";
     private static final String[] PARTS = {"Ground", "Vortex", "Glow", "Smoke", "Sparks_Squares", "Sparks_Dark"};
     private static final double ROTATION_SPEED = 0.5;
+    private static final float[] ROTATION_SPEEDS = {0.35f, 0.5f, 0.75f, 1f};
+    private static final Set<Float> readySpeeds = new LinkedHashSet<>();
     private static final HytaleLogger LOGGER = HytaleLogger.get("Definitely Not Beacon");
     private static boolean available;
 
@@ -31,9 +35,33 @@ public final class BeaconFxAssets {
         return available;
     }
 
+    /** Las velocidades se seleccionan de una lista acotada, sin publicar desde el hilo del mundo. */
+    static boolean validRotationSpeed(float speed) {
+        return Float.isFinite(speed) && speed >= 0.25f && speed <= 1f;
+    }
+
+    /** Obtiene la base recoloreable con el giro más cercano disponible. */
+    static String tintedBase(float requested) {
+        if (!available || readySpeeds.isEmpty()) return BASE;
+        float nearest = ROTATION_SPEEDS[1];
+        double difference = Double.POSITIVE_INFINITY;
+        for (float speed : readySpeeds) {
+            if (Math.abs(speed - requested) < difference) {
+                nearest = speed;
+                difference = Math.abs(speed - requested);
+            }
+        }
+        return Math.abs(nearest - ROTATION_SPEED) < 0.0001 ? TINTED_BASE : variantId(nearest);
+    }
+
+    private static String variantId(float speed) {
+        return TINTED_BASE + "_S" + Math.round(speed * 100);
+    }
+
     /** Clona y publica al arrancar. Nunca registra assets desde el hilo de juego. */
     public static void load() {
         available = false;
+        readySpeeds.clear();
         try {
             ParticleSystem base = ParticleSystem.getAssetMap().getAsset(BASE);
             if (base == null) throw new IllegalStateException("Missing original particle system " + BASE);
@@ -74,6 +102,16 @@ public final class BeaconFxAssets {
             if (systemResult.hasFailed()) throw new IllegalStateException(
                     "Could not publish tinted base: " + systemResult.getFailedToLoadKeys());
             available = true;
+            readySpeeds.add((float) ROTATION_SPEED);
+            for (float speed : ROTATION_SPEEDS) {
+                if (Math.abs(speed - ROTATION_SPEED) < 0.0001f) continue;
+                try {
+                    publishGroundSpeed(pack, base, speed);
+                    readySpeeds.add(speed);
+                } catch (RuntimeException error) {
+                    LOGGER.at(Level.WARNING).log("Base rotation variant %.2f unavailable: %s", speed, error.getMessage());
+                }
+            }
             if (slowed == 0) {
                 LOGGER.at(Level.WARNING).log("Tinted base loaded, but Ground exposes no supported rotation control to slow");
             } else {
@@ -83,6 +121,38 @@ public final class BeaconFxAssets {
             // Un error del laboratorio nunca debe impedir el arranque del Beacon real.
             LOGGER.at(Level.WARNING).log("Tinted Legendary base unavailable: %s", error.getMessage());
         }
+    }
+
+    /** Publica una variante de giro reutilizando las partículas decorativas comunes. */
+    private static void publishGroundSpeed(String pack, ParticleSystem originalSystem, float speed) {
+        ParticleSpawner original = ParticleSpawner.getAssetMap().getAsset(PREFIX + "Ground");
+        BsonDocument data = ParticleSpawner.CODEC.encode(original, new ExtraInfo()).asDocument();
+        data.remove("Id");
+        data.remove("Parent");
+        BsonDocument particle = data.getDocument("Particle", null);
+        if (particle != null) removeFixedColors(particle);
+        slowGroundRotation(data, speed);
+        String groundId = "Beacon_FX_Legendary_Ground_S" + Math.round(speed * 100);
+        var spawner = ParticleSpawner.getAssetStore().decode(pack, groundId, data);
+        var result = ParticleSpawner.getAssetStore().loadAssets(pack, List.of(spawner));
+        if (result.hasFailed()) throw new IllegalStateException("Failed ground variation: " + result.getFailedToLoadKeys());
+
+        BsonDocument system = ParticleSystem.CODEC.encode(originalSystem, new ExtraInfo()).asDocument();
+        system.remove("Id");
+        system.remove("Parent");
+        for (BsonValue value : system.getArray("Spawners")) {
+            BsonDocument entry = value.asDocument();
+            String nativeId = entry.getString("SpawnerId").getValue();
+            if (nativeId.startsWith(PREFIX)) {
+                String part = nativeId.substring(PREFIX.length());
+                entry.put("SpawnerId", new BsonString(part.equals("Ground")
+                        ? groundId : "Beacon_FX_Legendary_" + part));
+            }
+        }
+        var variant = ParticleSystem.getAssetStore().decode(pack, variantId(speed), system);
+        var resultSystem = ParticleSystem.getAssetStore().loadAssets(pack, List.of(variant));
+        if (resultSystem.hasFailed()) throw new IllegalStateException("Failed base variation: "
+                + resultSystem.getFailedToLoadKeys());
     }
 
     /** El color del comando prevalece frente a los colores de los frames de la partícula. */
@@ -100,7 +170,15 @@ public final class BeaconFxAssets {
 
     /** Reduce a la mitad las fuerzas circulares o la cadencia de animación del anillo. */
     static int slowGroundRotation(BsonDocument spawner) {
-        int scaled = slowTangentialMotion(spawner);
+        return slowGroundRotation(spawner, ROTATION_SPEED);
+    }
+
+    /** Escala la rotación original sin modificar la velocidad de movimiento de las demás partículas. */
+    static int slowGroundRotation(BsonDocument spawner, double speed) {
+        if (!Double.isFinite(speed) || speed <= 0d || speed > 1d) {
+            throw new IllegalArgumentException("Rotation speed must be in (0,1]");
+        }
+        int scaled = slowTangentialMotion(spawner, speed);
         if (scaled > 0) return scaled;
         BsonDocument particle = spawner.getDocument("Particle", null);
         BsonDocument animation = particle == null ? null : particle.getDocument("Animation", null);
@@ -108,21 +186,21 @@ public final class BeaconFxAssets {
         if (animation == null || lifetime == null) return 0;
         boolean spins = animation.values().stream().anyMatch(frame -> frame.isDocument()
                 && (frame.asDocument().containsKey("Rotation") || frame.asDocument().containsKey("FrameIndex")));
-        return spins ? scalePositiveRange(lifetime, 1d / ROTATION_SPEED) : 0;
+        return spins ? scalePositiveRange(lifetime, 1d / speed) : 0;
     }
 
     /** Ajusta solo velocidades tangenciales, no movimiento ni velocidad lineales. */
-    private static int slowTangentialMotion(BsonValue value) {
+    private static int slowTangentialMotion(BsonValue value, double speed) {
         int scaled = 0;
         if (value.isDocument()) {
             BsonDocument document = value.asDocument();
             for (String key : List.copyOf(document.keySet())) {
                 BsonValue child = document.get(key);
                 if ((key.equals("RadialTangentAcceleration") || key.equals("RadialTangentImpulse")) && child.isNumber()) {
-                    document.put(key, new BsonDouble(child.asNumber().doubleValue() * ROTATION_SPEED));
+                    document.put(key, new BsonDouble(child.asNumber().doubleValue() * speed));
                     scaled++;
                 } else {
-                    scaled += slowTangentialMotion(child);
+                    scaled += slowTangentialMotion(child, speed);
                 }
             }
         } else if (value.isArray()) {
