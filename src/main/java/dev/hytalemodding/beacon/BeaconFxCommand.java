@@ -30,6 +30,7 @@ public final class BeaconFxCommand extends AbstractCommandCollection {
         super("beaconfx", "Pruebas temporales de partículas para el Beacon");
         addSubCommand(new Test());
         addSubCommand(new Beam());
+        addSubCommand(new Legendary());
     }
 
     /** Traduce colores comunes o un hexadecimal; 'native' conserva el color definido por el asset. */
@@ -71,6 +72,27 @@ public final class BeaconFxCommand extends AbstractCommandCollection {
                 0f, 0f, 0f, scale, color, null, List.of(player), store, PREVIEW_SECONDS);
     }
 
+    /** Dibuja un único rayo ancho/alto, independientemente de los adornos originales. */
+    private static float previewRay(float height, float width, Color tint, boolean decoration,
+                                    Ref<EntityStore> player, Store<EntityStore> store) {
+        int selectedRatio = ratio(height / width);
+        float actualHeight = selectedRatio * width;
+        Vector3d position = store.getComponent(player, TransformComponent.getComponentType()).getPosition();
+        if (decoration) {
+            // Los adornos de Drop_Legendary mantienen su escala original, sin los dos rayos vanilla.
+            spawn("Beacon_FX_Legendary_Base", new Vector3d(position), 1f, null, player, store);
+        }
+        Vector3d middle = new Vector3d(position.x, position.y + 0.05 + actualHeight / 2d, position.z);
+        spawn("Beacon_FX_Ray_" + selectedRatio, middle, width, tint, player, store);
+        return actualHeight;
+    }
+
+    /** Rechaza tamaños no finitos o fuera de los límites de pruebas. */
+    private static boolean validDimensions(float height, float width) {
+        return Float.isFinite(height) && Float.isFinite(width) &&
+                height >= 4f && height <= 128f && width >= 0.2f && width <= 2f;
+    }
+
     /** Prueba el sistema nativo completo con escalado uniforme; no modifica sus assets. */
     private static final class Test extends AbstractPlayerCommand {
         private final RequiredArg<String> effect = withRequiredArg("effect", "ID nativo, por ejemplo Drop_Legendary", ArgTypes.STRING);
@@ -92,7 +114,8 @@ public final class BeaconFxCommand extends AbstractCommandCollection {
             try {
                 Vector3d position = store.getComponent(ref, TransformComponent.getComponentType()).getPosition();
                 spawn(effect.get(context), new Vector3d(position), size, color(tint.get(context)), ref, store);
-                context.sendMessage(Message.raw("Efecto de prueba enviado (duracion maxima 8 s)."));
+                context.sendMessage(Message.raw("Efecto original a escala uniforme: tambien crecen los adornos. "
+                        + "Su color depende de los ajustes de cada emisor nativo."));
             } catch (IllegalArgumentException error) {
                 context.sendMessage(Message.raw(error.getMessage()));
             }
@@ -114,22 +137,49 @@ public final class BeaconFxCommand extends AbstractCommandCollection {
                                @Nonnull Ref<EntityStore> ref, @Nonnull PlayerRef playerRef, @Nonnull World world) {
             float h = height.get(context);
             float w = width.get(context);
-            if (!Float.isFinite(h) || !Float.isFinite(w) || h < 4f || h > 128f || w < 0.2f || w > 2f) {
+            if (!validDimensions(h, w)) {
                 context.sendMessage(Message.raw("Altura: 4 a 128; anchura: 0.2 a 2 bloques."));
                 return;
             }
             try {
-                int ratio = ratio(h / w);
-                float actualHeight = ratio * w;
-                String asset = "Beacon_FX_Ray_" + ratio;
-                Vector3d playerPos = store.getComponent(ref, TransformComponent.getComponentType()).getPosition();
-                Vector3d bottom = new Vector3d(playerPos.x, playerPos.y + 0.05, playerPos.z);
-                spawn(asset, bottom.add(0, actualHeight / 2d, 0), w, color(tint.get(context)), ref, store);
+                float actualHeight = previewRay(h, w, color(tint.get(context)), false, ref, store);
                 context.sendMessage(Message.raw(String.format(Locale.ROOT,
-                        "Rayo de prueba: altura aprox. %.1f bloques, ancho %.2f, duracion maxima 8 s.", actualHeight, w)));
+                        "Rayo solo: alto aprox. %.1f, ancho %.2f, color solicitado %s (8 s).",
+                        actualHeight, w, tint.get(context))));
             } catch (IllegalArgumentException error) {
                 context.sendMessage(Message.raw(error.getMessage()));
             }
         }
     }
+    /** Reproduce la base legendaria a escala normal y dibuja solamente el rayo en grande. */
+    private static final class Legendary extends AbstractPlayerCommand {
+        private final RequiredArg<Float> height = withRequiredArg("height", "Altura del rayo (4 a 128)", ArgTypes.FLOAT);
+        private final RequiredArg<Float> width = withRequiredArg("width", "Anchura del rayo (0.2 a 2)", ArgTypes.FLOAT);
+        private final RequiredArg<String> tint = withRequiredArg("color", "Color del rayo o hexadecimal", ArgTypes.STRING);
+
+        Legendary() {
+            super("legendary", "Base de Drop_Legendary sin escalar y rayo luminoso escalado por separado");
+        }
+
+        @Override
+        protected void execute(@Nonnull CommandContext context, @Nonnull Store<EntityStore> store,
+                               @Nonnull Ref<EntityStore> ref, @Nonnull PlayerRef playerRef, @Nonnull World world) {
+            float h = height.get(context);
+            float w = width.get(context);
+            if (!validDimensions(h, w)) {
+                context.sendMessage(Message.raw("Altura: 4 a 128; anchura: 0.2 a 2 bloques."));
+                return;
+            }
+            try {
+                Color color = color(tint.get(context));
+                float actualHeight = previewRay(h, w, color, true, ref, store);
+                context.sendMessage(Message.raw(String.format(Locale.ROOT,
+                        "Base legendaria al 100%%, rayo %.1f x %.2f, color %s (8 s).",
+                        actualHeight, w, tint.get(context))));
+            } catch (IllegalArgumentException error) {
+                context.sendMessage(Message.raw(error.getMessage()));
+            }
+        }
+    }
+
 }
