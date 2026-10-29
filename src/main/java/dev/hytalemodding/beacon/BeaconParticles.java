@@ -30,8 +30,13 @@ final class BeaconParticles {
     static final double VIEW_DISTANCE = 150d;
     static final int REFRESH_TICKS = 140;
     static final float EFFECT_DURATION = 8f;
-    /** Eleva el efecto completo 0,65 bloques sobre su anclaje anterior. */
-    static final double VISUAL_Y_ADJUSTMENT = 0.65d;
+    /** El emisor arranca a la altura superior del bloque Beacon, no dentro de su geometria. */
+    static final double VISUAL_Y_ADJUSTMENT = 0.90d;
+    /** Un unico refuerzo corto corrige el extremo transparente del Glow nativo. */
+    static final float FOOT_HEIGHT = 8f;
+    static final float FOOT_WIDTH = 0.38f;
+    static final float FOOT_BRIGHTNESS = 0.72f;
+    static final double FOOT_CENTER_ABOVE_BASE = 1.7d;
 
     /** Cada mundo posee su propio mapa de espectadores y el último color enviado. */
     private final Map<BeaconStructures.Position, Map<UUID, Emission>> sent = new HashMap<>();
@@ -51,6 +56,7 @@ final class BeaconParticles {
         World world = store.getExternalData().getWorld();
         long tick = world.getTick();
         var profile = BeaconFxProfiles.select(HEIGHT, WIDTH, BRIGHTNESS);
+        var footProfile = BeaconFxProfiles.select(FOOT_HEIGHT, FOOT_WIDTH, FOOT_BRIGHTNESS);
         float actualHeight = profile.heightAt(WIDTH);
         String base = BeaconFxAssets.tintedBase(BASE_ROTATION);
         for (var position : active) {
@@ -78,6 +84,11 @@ final class BeaconParticles {
                                 BeaconFxCommand.automaticOffset(actualHeight)), origin.z);
                 ParticleUtil.spawnParticleEffect(profile.assetId(), beamOrigin.x, beamOrigin.y, beamOrigin.z,
                         0f, 0f, 0f, WIDTH, color, null, recipients, store, EFFECT_DURATION);
+                // Glow pierde alfa en sus extremos: una sola capa corta rellena el arranque.
+                // No duplicar la columna completa: produciria una silueta excesivamente brillante.
+                ParticleUtil.spawnParticleEffect(footProfile.assetId(), origin.x,
+                        footCenterY(origin.y), origin.z, 0f, 0f, 0f,
+                        FOOT_WIDTH, color, null, recipients, store, EFFECT_DURATION);
                 byPlayer.put(id, new Emission(tick));
             }
             // Al salir del alcance deja de renovar la emisión; un retorno genera el efecto de inmediato.
@@ -85,9 +96,14 @@ final class BeaconParticles {
         }
     }
 
-    /** Ancla la base y el haz juntos, sin cambiar su tamaño ni sus colores. */
+    /** Ancla la base justo sobre la apertura del Beacon, sin mover X/Z. */
     static Vector3d origin(BeaconStructures.Position position) {
         return new Vector3d(position.x() + 0.5, position.y() + 0.1 + VISUAL_Y_ADJUSTMENT, position.z() + 0.5);
+    }
+
+    /** Situa el maximo del refuerzo ligeramente por encima de la abertura. */
+    static double footCenterY(double baseY) {
+        return baseY + FOOT_CENTER_ABOVE_BASE;
     }
 
     /** Evita duplicados durante el intervalo de vida de las partículas. */
@@ -102,13 +118,17 @@ final class BeaconParticles {
         return dx * dx + dz * dz <= VIEW_DISTANCE * VIEW_DISTANCE;
     }
 
-    /** Devuelve -1 para blanco nativo o el último color resultante de los cristales. */
+    /** Reutiliza la mezcla acumulativa de cristales del haz anterior para toda la columna. */
     private static int tint(BeaconStructures.Position position, Store<EntityStore> store) {
-        var spans = BeaconCrystals.trace(store.getExternalData().getWorld().getChunkStore(), position);
+        return tintFromSpans(BeaconCrystals.trace(store.getExternalData().getWorld().getChunkStore(), position));
+    }
+
+    /** El ultimo tono valido ya incluye la mezcla de todos los cristales inferiores. */
+    static int tintFromSpans(List<BeaconCrystals.Span> spans) {
         for (int i = spans.size() - 1; i >= 0; i--) {
-            int color = spans.get(i).color();
-            if (color >= 0) return BeaconCrystals.luminousColor(color);
+            int rgb = spans.get(i).color();
+            if (rgb >= 0) return BeaconCrystals.luminousColor(rgb);
         }
-        return -1;
+        return -1; // Blanco nativo, incluso con cristales blancos.
     }
 }
