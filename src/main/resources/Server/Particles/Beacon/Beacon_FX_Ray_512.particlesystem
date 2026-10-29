@@ -1,0 +1,10 @@
+{
+  "Spawners": [
+    {
+      "SpawnerId": "Beacon_FX_Ray_512_Spawner"
+    }
+  ],
+  "CullDistance": 256,
+  "BoundingRadius": 256,
+  "IsImportant": true
+}
