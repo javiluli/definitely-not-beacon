@@ -82,6 +82,34 @@ El JSON del Beacon declara `Supporting.Up` de tipo `Full`. Los diez cristales pe
 
 El asset nativo [Beam](https://docs.hytale.com/assets/entity/beams/) de 0.7.4 declara una textura. Su componente `AttachedBeam` y el paquete `BeamInstance` no exponen RGB ni giro del núcleo por instancia. No sustituyen directamente el modelo giratorio con `PostColor` conservando su aspecto; los colores y efectos actuales usan `ModelVFX` y `EntityEffect` nativos.
 
+## Laboratorio experimental de partículas (rama `experiment/beacon-particles`)
+
+El laboratorio `/beaconfx` no reemplaza todavía el haz principal del Beacon. La base se
+publica en memoria desde `BeaconFxAssets`, copiando los emisores nativos de
+`Drop_Legendary`, retirando sus colores fijados y preparando cuatro velocidades de
+rotación. `BeaconFxProfiles` publica 29 relaciones alto/ancho y tres opacidades
+(87 perfiles); cada perfil utiliza la textura vanilla `Glow.png` y un único emisor,
+sin generar PNG nuevos. Se registran durante `start()`, nunca al ejecutar un
+comando ni en un tick de mundo.
+
+Para comparar visualmente:
+
+```text
+/beaconfx polish purple
+/beaconfx custom 40 0.65 purple 0.94 0.85 0.5
+/beaconfx customalign 40 0.65 purple 0.94 0.85 0.5 -5
+```
+
+Los parámetros son altura solicitada, anchura, color, brillo (0.5–1),
+escala global de la base (0.5–1.5) y velocidad de giro solicitada (0.25–1).
+`customalign` añade un offset Y. La altura y el brillo reales se aproximan al
+perfil precalculado; el giro se aproxima a las velocidades registradas 0.35,
+0.5, 0.75 o 1. La base solo dispone de escala global, no de tamaño X/Z independiente.
+`/beaconfx tune` y sus JSON anteriores se conservan como referencia segura
+hasta que se pruebe en el cliente la publicación dinámica. Si no se cargan perfiles,
+el laboratorio lo informa y no afecta a las mecánicas originales. Compila con
+`./gradlew build` y reinicia completamente Hytale para actualizar assets.
+
 ## Comprobación con cliente
 
 La fixture nativa verifica carga, límites, animación registrada, rotación replicada, tintes y ciclo de las capas. El parser y el renderizado del cliente requieren una prueba real. Tras un cambio visual, comprueba bloque colocado y sostenido, iconos, pulso, giro del núcleo, halo fijo, flujo de textura y retirada/reparación de la base. Para cristales, comprueba colocación sobre el Beacon, rechazo del apilado sin otro apoyo, color individual, mezcla con apoyos laterales y retirada, además de abrir con F apuntando al Beacon desde arriba. Revisa también los gestos de inventario si cambias sus texturas o la página `.ui`.
