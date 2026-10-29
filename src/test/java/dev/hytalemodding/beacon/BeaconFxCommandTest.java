@@ -22,4 +22,31 @@ class BeaconFxCommandTest {
         assertEquals(0xFF, Byte.toUnsignedInt(cyan.blue));
         assertThrows(IllegalArgumentException.class, () -> BeaconFxCommand.color("not-a-color"));
     }
+    @Test
+    void previewAssetsAllowRuntimeTintWithoutFixedWhite() throws Exception {
+        int[] ratios = {16, 32, 48, 64, 80, 96, 128, 160, 256, 384, 512, 640};
+        for (int ratio : ratios) {
+            String path = "/Server/Particles/Beacon/Beacon_FX_Ray_" + ratio + "_Spawner.particlespawner";
+            try (var stream = BeaconFxCommandTest.class.getResourceAsStream(path)) {
+                assertNotNull(stream, "Asset de rayo no encontrado: " + ratio);
+                String json = new String(stream.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+                assertFalse(json.contains("\"Color\""), "El color fijo anula el tintado Java: " + ratio);
+                assertTrue(json.contains("BlendLinear"), "El modo aditivo puede blanquear el color: " + ratio);
+            }
+        }
+    }
+
+    @Test
+    void legendaryBaseUsesNativeDecorationOnly() throws Exception {
+        try (var stream = BeaconFxCommandTest.class.getResourceAsStream(
+                "/Server/Particles/Beacon/Beacon_FX_Legendary_Base.particlesystem")) {
+            assertNotNull(stream);
+            String json = new String(stream.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+            assertTrue(json.contains("Drop_Legendary_Ground"));
+            assertTrue(json.contains("Drop_Legendary_Sparks_Squares"));
+            assertFalse(json.contains("Drop_Legendary_Ray_Center"));
+            assertFalse(json.contains("\"Drop_Legendary_Ray\""));
+        }
+    }
+
 }
