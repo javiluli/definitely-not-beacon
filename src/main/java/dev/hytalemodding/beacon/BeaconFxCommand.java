@@ -24,13 +24,14 @@ import java.util.Locale;
 /** Laboratorio aislado de partículas. No altera la representación normal del Beacon. */
 public final class BeaconFxCommand extends AbstractCommandCollection {
     private static final float PREVIEW_SECONDS = 8f;
-    private static final int[] RATIOS = {16, 32, 48, 64, 80, 96, 128, 160, 256, 384, 512, 640};
+    private static final int[] RATIOS = {2, 4, 8, 16, 32, 48, 64, 80, 96, 128, 160, 256, 384, 512, 640};
 
     public BeaconFxCommand() {
         super("beaconfx", "Pruebas temporales de partículas para el Beacon");
         addSubCommand(new Test());
         addSubCommand(new Beam());
         addSubCommand(new Legendary());
+        addSubCommand(new Center());
     }
 
     /** Traduce colores comunes o un hexadecimal; 'native' conserva el color definido por el asset. */
@@ -72,18 +73,40 @@ public final class BeaconFxCommand extends AbstractCommandCollection {
                 0f, 0f, 0f, scale, color, null, List.of(player), store, PREVIEW_SECONDS);
     }
 
-    /** Dibuja un único rayo ancho/alto, independientemente de los adornos originales. */
+    /** Dibuja un segmento vertical usando la textura Glow nativa, con la altura aproximada. */
+    private static float rayPart(float height, float width, Vector3d middle, Color tint,
+                                 Ref<EntityStore> player, Store<EntityStore> store) {
+        int selectedRatio = ratio(height / width);
+        spawn("Beacon_FX_Ray_" + selectedRatio, middle, width, tint, player, store);
+        return selectedRatio * width;
+    }
+
+    /** Separa base y columna. El nucleo superpuesto mantiene mas brillo en la zona central. */
     private static float previewRay(float height, float width, Color tint, boolean decoration,
                                     Ref<EntityStore> player, Store<EntityStore> store) {
+        Vector3d position = store.getComponent(player, TransformComponent.getComponentType()).getPosition();
         int selectedRatio = ratio(height / width);
         float actualHeight = selectedRatio * width;
-        Vector3d position = store.getComponent(player, TransformComponent.getComponentType()).getPosition();
         if (decoration) {
-            // Los adornos de Drop_Legendary mantienen su escala original, sin los dos rayos vanilla.
-            spawn("Beacon_FX_Legendary_Base", new Vector3d(position), 1f, null, player, store);
+            // La base coloreable es independiente del rayo: nunca se escala con su altura.
+            spawn("Beacon_FX_Tinted_Base", new Vector3d(position), 1f, tint, player, store);
         }
-        Vector3d middle = new Vector3d(position.x, position.y + 0.05 + actualHeight / 2d, position.z);
-        spawn("Beacon_FX_Ray_" + selectedRatio, middle, width, tint, player, store);
+        double bottom = position.y + 0.05;
+        rayPart(actualHeight, width, new Vector3d(position.x, bottom + actualHeight / 2d, position.z),
+                tint, player, store);
+        if (decoration) {
+            // Glow se desvanece en los extremos; capas mas cortas se solapan para reforzar el recorrido.
+            float innerWidth = Math.max(width * 0.65f, actualHeight / 640f);
+            rayPart(actualHeight * 0.92f, innerWidth,
+                    new Vector3d(position.x, bottom + actualHeight * 0.5d, position.z), tint, player, store);
+
+            float sectionHeight = actualHeight * 0.58f;
+            float sectionWidth = Math.max(width * 0.48f, sectionHeight / 640f);
+            for (double fraction : new double[]{0.32, 0.68}) {
+                rayPart(sectionHeight, sectionWidth,
+                        new Vector3d(position.x, bottom + actualHeight * fraction, position.z), tint, player, store);
+            }
+        }
         return actualHeight;
     }
 
@@ -151,14 +174,14 @@ public final class BeaconFxCommand extends AbstractCommandCollection {
             }
         }
     }
-    /** Reproduce la base legendaria a escala normal y dibuja solamente el rayo en grande. */
+    /** Usa base recoloreable y un nucleo mas intenso que la prueba de rayo aislado. */
     private static final class Legendary extends AbstractPlayerCommand {
         private final RequiredArg<Float> height = withRequiredArg("height", "Altura del rayo (4 a 128)", ArgTypes.FLOAT);
         private final RequiredArg<Float> width = withRequiredArg("width", "Anchura del rayo (0.2 a 2)", ArgTypes.FLOAT);
         private final RequiredArg<String> tint = withRequiredArg("color", "Color del rayo o hexadecimal", ArgTypes.STRING);
 
         Legendary() {
-            super("legendary", "Base de Drop_Legendary sin escalar y rayo luminoso escalado por separado");
+            super("legendary", "Base recoloreable y rayo de Glow con nucleo reforzado");
         }
 
         @Override
@@ -174,8 +197,34 @@ public final class BeaconFxCommand extends AbstractCommandCollection {
                 Color color = color(tint.get(context));
                 float actualHeight = previewRay(h, w, color, true, ref, store);
                 context.sendMessage(Message.raw(String.format(Locale.ROOT,
-                        "Base legendaria al 100%%, rayo %.1f x %.2f, color %s (8 s).",
+                        "Base recoloreable con rayo reforzado %.1f x %.2f, color %s (8 s).",
                         actualHeight, w, tint.get(context))));
+            } catch (IllegalArgumentException error) {
+                context.sendMessage(Message.raw(error.getMessage()));
+            }
+        }
+    }
+
+    /** Comparacion: reutiliza el Ray_Center original, sin modificar su recurso. */
+    private static final class Center extends AbstractPlayerCommand {
+        private final RequiredArg<Float> scale = withRequiredArg("scale", "Escala uniforme del rayo original (0.1 a 8)", ArgTypes.FLOAT);
+
+        Center() {
+            super("center", "Prueba aislada del Drop_Legendary_Ray_Center original");
+        }
+
+        @Override
+        protected void execute(@Nonnull CommandContext context, @Nonnull Store<EntityStore> store,
+                               @Nonnull Ref<EntityStore> ref, @Nonnull PlayerRef playerRef, @Nonnull World world) {
+            float size = scale.get(context);
+            if (!Float.isFinite(size) || size < 0.1f || size > 8f) {
+                context.sendMessage(Message.raw("Escala permitida: 0.1 a 8."));
+                return;
+            }
+            try {
+                Vector3d position = store.getComponent(ref, TransformComponent.getComponentType()).getPosition();
+                spawn("Beacon_FX_Native_Ray_Center", new Vector3d(position), size, null, ref, store);
+                context.sendMessage(Message.raw("Ray_Center original: escala uniforme. No se ha cambiado su color ni su proporcion."));
             } catch (IllegalArgumentException error) {
                 context.sendMessage(Message.raw(error.getMessage()));
             }
