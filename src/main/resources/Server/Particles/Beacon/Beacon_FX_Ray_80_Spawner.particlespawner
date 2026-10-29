@@ -1,5 +1,5 @@
 {
-  "RenderMode": "BlendAdd",
+  "RenderMode": "BlendLinear",
   "ParticleRotationInfluence": "BillboardY",
   "LightInfluence": 0,
   "LinearFiltering": true,
@@ -28,7 +28,6 @@
     "UVOption": "None",
     "SoftParticles": "Disable",
     "InitialAnimationFrame": {
-      "Color": "#FFFFFF",
       "Opacity": 0.85,
       "Scale": {
         "X": {
