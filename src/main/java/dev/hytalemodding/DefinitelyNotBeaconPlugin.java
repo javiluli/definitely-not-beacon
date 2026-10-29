@@ -12,6 +12,7 @@ import dev.hytalemodding.beacon.BeaconCrystals;
 import dev.hytalemodding.beacon.BeaconEffects;
 import dev.hytalemodding.beacon.BeaconFxCommand;
 import dev.hytalemodding.beacon.BeaconFxAssets;
+import dev.hytalemodding.beacon.BeaconFxProfiles;
 import dev.hytalemodding.beacon.BeaconMiningSystem;
 import dev.hytalemodding.beacon.BeaconOpenInteraction;
 import dev.hytalemodding.beacon.BeaconPower;
@@ -60,6 +61,7 @@ public class DefinitelyNotBeaconPlugin extends JavaPlugin {
         BeaconBeamModels.load();
         BeaconCrystals.loadPalette();
         BeaconFxAssets.load();
+        BeaconFxProfiles.load();
         BeaconEffects.load();
         attackSpeed.loadAssets();
         ModelAsset halo = ModelAsset.getAssetMap().getAsset("Beacon_Beam_Halo");
