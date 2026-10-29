@@ -36,7 +36,7 @@ final class BeaconParticles {
     static final float FOOT_HEIGHT = 8f;
     static final float FOOT_WIDTH = 0.38f;
     static final float FOOT_BRIGHTNESS = 0.72f;
-    static final double FOOT_CENTER_ABOVE_BASE = 1.7d;
+    static final double FOOT_CENTER_ABOVE_BASE = 3.5d;
 
     /** Cada mundo posee su propio mapa de espectadores y el último color enviado. */
     private final Map<BeaconStructures.Position, Map<UUID, Emission>> sent = new HashMap<>();
