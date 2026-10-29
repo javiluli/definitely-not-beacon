@@ -1,0 +1,135 @@
+package dev.hytalemodding.beacon;
+
+import com.hypixel.hytale.component.Ref;
+import com.hypixel.hytale.component.Store;
+import com.hypixel.hytale.protocol.Color;
+import com.hypixel.hytale.server.core.asset.type.particle.config.ParticleSystem;
+import com.hypixel.hytale.server.core.command.system.CommandContext;
+import com.hypixel.hytale.server.core.command.system.arguments.system.RequiredArg;
+import com.hypixel.hytale.server.core.command.system.arguments.types.ArgTypes;
+import com.hypixel.hytale.server.core.command.system.basecommands.AbstractCommandCollection;
+import com.hypixel.hytale.server.core.command.system.basecommands.AbstractPlayerCommand;
+import com.hypixel.hytale.server.core.modules.entity.component.TransformComponent;
+import com.hypixel.hytale.server.core.universe.PlayerRef;
+import com.hypixel.hytale.server.core.universe.world.ParticleUtil;
+import com.hypixel.hytale.server.core.universe.world.World;
+import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
+import com.hypixel.hytale.server.core.Message;
+import org.joml.Vector3d;
+
+import javax.annotation.Nonnull;
+import java.util.List;
+import java.util.Locale;
+
+/** Laboratorio aislado de partículas. No altera la representación normal del Beacon. */
+public final class BeaconFxCommand extends AbstractCommandCollection {
+    private static final float PREVIEW_SECONDS = 8f;
+    private static final int[] RATIOS = {16, 32, 48, 64, 80, 96, 128, 160, 256, 384, 512, 640};
+
+    public BeaconFxCommand() {
+        super("beaconfx", "Pruebas temporales de partículas para el Beacon");
+        addSubCommand(new Test());
+        addSubCommand(new Beam());
+    }
+
+    /** Traduce colores comunes o un hexadecimal; 'native' conserva el color definido por el asset. */
+    static Color color(String input) {
+        String name = input.toLowerCase(Locale.ROOT);
+        String hex = switch (name) {
+            case "native", "default" -> null;
+            case "cyan" -> "49DFFF";
+            case "purple" -> "B36BFF";
+            case "red" -> "FF5050";
+            case "green" -> "64F7A0";
+            case "white" -> "FFFFFF";
+            case "blue" -> "468DFF";
+            case "yellow" -> "FFE055";
+            default -> name.startsWith("#") ? name.substring(1) : name;
+        };
+        if (hex == null) return null;
+        if (!hex.matches("[0-9a-fA-F]{6}")) throw new IllegalArgumentException(
+                "Color no valido: usa cyan, purple, red, green, white, blue, yellow, native o RRGGBB");
+        int rgb = Integer.parseInt(hex, 16);
+        return new Color((byte) (rgb >> 16), (byte) (rgb >> 8), (byte) rgb);
+    }
+
+    /** Selecciona el recurso de geometría cuya relación alto/ancho se aproxima más a la solicitada. */
+    static int ratio(double value) {
+        int closest = RATIOS[0];
+        for (int candidate : RATIOS) {
+            if (Math.abs(candidate - value) < Math.abs(closest - value)) closest = candidate;
+        }
+        return closest;
+    }
+
+    /** Envía una prueba solo al jugador que la solicita; el cliente la descarta al expirar. */
+    private static void spawn(String asset, Vector3d position, float scale, Color color,
+                              Ref<EntityStore> player, Store<EntityStore> store) {
+        if (ParticleSystem.getAssetMap().getAsset(asset) == null) throw new IllegalArgumentException(
+                "No existe el ParticleSystem: " + asset);
+        ParticleUtil.spawnParticleEffect(asset, position.x, position.y, position.z,
+                0f, 0f, 0f, scale, color, null, List.of(player), store, PREVIEW_SECONDS);
+    }
+
+    /** Prueba el sistema nativo completo con escalado uniforme; no modifica sus assets. */
+    private static final class Test extends AbstractPlayerCommand {
+        private final RequiredArg<String> effect = withRequiredArg("effect", "ID nativo, por ejemplo Drop_Legendary", ArgTypes.STRING);
+        private final RequiredArg<Float> scale = withRequiredArg("scale", "Escala uniforme de 0.1 a 8", ArgTypes.FLOAT);
+        private final RequiredArg<String> tint = withRequiredArg("color", "Color, hexadecimal o native", ArgTypes.STRING);
+
+        Test() {
+            super("test", "Prueba un efecto original con escala y color");
+        }
+
+        @Override
+        protected void execute(@Nonnull CommandContext context, @Nonnull Store<EntityStore> store,
+                               @Nonnull Ref<EntityStore> ref, @Nonnull PlayerRef playerRef, @Nonnull World world) {
+            float size = scale.get(context);
+            if (!Float.isFinite(size) || size < 0.1f || size > 8f) {
+                context.sendMessage(Message.raw("Escala permitida: 0.1 a 8."));
+                return;
+            }
+            try {
+                Vector3d position = store.getComponent(ref, TransformComponent.getComponentType()).getPosition();
+                spawn(effect.get(context), new Vector3d(position), size, color(tint.get(context)), ref, store);
+                context.sendMessage(Message.raw("Efecto de prueba enviado (duracion maxima 8 s)."));
+            } catch (IllegalArgumentException error) {
+                context.sendMessage(Message.raw(error.getMessage()));
+            }
+        }
+    }
+
+    /** Haz de un solo emisor con textura Glow nativa y proporciones verticales precalculadas. */
+    private static final class Beam extends AbstractPlayerCommand {
+        private final RequiredArg<Float> height = withRequiredArg("height", "Altura en bloques (4 a 128)", ArgTypes.FLOAT);
+        private final RequiredArg<Float> width = withRequiredArg("width", "Anchura en bloques (0.2 a 2)", ArgTypes.FLOAT);
+        private final RequiredArg<String> tint = withRequiredArg("color", "Color o hexadecimal", ArgTypes.STRING);
+
+        Beam() {
+            super("beam", "Previsualiza un rayo vertical de partículas con textura nativa Glow");
+        }
+
+        @Override
+        protected void execute(@Nonnull CommandContext context, @Nonnull Store<EntityStore> store,
+                               @Nonnull Ref<EntityStore> ref, @Nonnull PlayerRef playerRef, @Nonnull World world) {
+            float h = height.get(context);
+            float w = width.get(context);
+            if (!Float.isFinite(h) || !Float.isFinite(w) || h < 4f || h > 128f || w < 0.2f || w > 2f) {
+                context.sendMessage(Message.raw("Altura: 4 a 128; anchura: 0.2 a 2 bloques."));
+                return;
+            }
+            try {
+                int ratio = ratio(h / w);
+                float actualHeight = ratio * w;
+                String asset = "Beacon_FX_Ray_" + ratio;
+                Vector3d playerPos = store.getComponent(ref, TransformComponent.getComponentType()).getPosition();
+                Vector3d bottom = new Vector3d(playerPos.x, playerPos.y + 0.05, playerPos.z);
+                spawn(asset, bottom.add(0, actualHeight / 2d, 0), w, color(tint.get(context)), ref, store);
+                context.sendMessage(Message.raw(String.format(Locale.ROOT,
+                        "Rayo de prueba: altura aprox. %.1f bloques, ancho %.2f, duracion maxima 8 s.", actualHeight, w)));
+            } catch (IllegalArgumentException error) {
+                context.sendMessage(Message.raw(error.getMessage()));
+            }
+        }
+    }
+}
