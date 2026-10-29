@@ -31,6 +31,8 @@ public final class BeaconFxCommand extends AbstractCommandCollection {
         addSubCommand(new Test());
         addSubCommand(new Beam());
         addSubCommand(new Legendary());
+        addSubCommand(new Align());
+        addSubCommand(new Center());
     }
 
     /** Traduce colores comunes o un hexadecimal; 'native' conserva el color definido por el asset. */
@@ -72,9 +74,20 @@ public final class BeaconFxCommand extends AbstractCommandCollection {
                 0f, 0f, 0f, scale, color, null, List.of(player), store, PREVIEW_SECONDS);
     }
 
-    /** Dibuja un único rayo ancho/alto, independientemente de los adornos originales. */
+    /** Centro propuesto del sprite, ajustable para corregir su anclaje sin cambiar recursos. */
+    static double centerY(double groundY, float height, float verticalOffset) {
+        return groundY + 0.05d + height / 2d + verticalOffset;
+    }
+
+    /** Vista habitual: conserva el anclaje original como referencia visual. */
     private static float previewRay(float height, float width, Color tint, boolean decoration,
                                     Ref<EntityStore> player, Store<EntityStore> store) {
+        return previewRay(height, width, tint, decoration, 0f, player, store);
+    }
+
+    /** Vista con ajuste vertical, sin modificar la altura ni la base del efecto. */
+    private static float previewRay(float height, float width, Color tint, boolean decoration,
+                                    float verticalOffset, Ref<EntityStore> player, Store<EntityStore> store) {
         int selectedRatio = ratio(height / width);
         float actualHeight = selectedRatio * width;
         Vector3d position = store.getComponent(player, TransformComponent.getComponentType()).getPosition();
@@ -82,7 +95,7 @@ public final class BeaconFxCommand extends AbstractCommandCollection {
             // Los adornos de Drop_Legendary mantienen su escala original, sin los dos rayos vanilla.
             spawn("Beacon_FX_Legendary_Base", new Vector3d(position), 1f, null, player, store);
         }
-        Vector3d middle = new Vector3d(position.x, position.y + 0.05 + actualHeight / 2d, position.z);
+        Vector3d middle = new Vector3d(position.x, centerY(position.y, actualHeight, verticalOffset), position.z);
         spawn("Beacon_FX_Ray_" + selectedRatio, middle, width, tint, player, store);
         return actualHeight;
     }
@@ -176,6 +189,64 @@ public final class BeaconFxCommand extends AbstractCommandCollection {
                 context.sendMessage(Message.raw(String.format(Locale.ROOT,
                         "Base legendaria al 100%%, rayo %.1f x %.2f, color %s (8 s).",
                         actualHeight, w, tint.get(context))));
+            } catch (IllegalArgumentException error) {
+                context.sendMessage(Message.raw(error.getMessage()));
+            }
+        }
+    }
+
+    /** Ajusta el anclaje del rayo en bloques, para calibrarlo dentro del cliente. */
+    private static final class Align extends AbstractPlayerCommand {
+        private final RequiredArg<Float> height = withRequiredArg("height", "Altura solicitada de 4 a 128", ArgTypes.FLOAT);
+        private final RequiredArg<Float> width = withRequiredArg("width", "Anchura de 0.2 a 2", ArgTypes.FLOAT);
+        private final RequiredArg<String> tint = withRequiredArg("color", "Color o hexadecimal", ArgTypes.STRING);
+        private final RequiredArg<Float> offset = withRequiredArg("offset", "Desplazamiento Y en bloques, p.ej. -8", ArgTypes.FLOAT);
+
+        Align() {
+            super("align", "Ajusta la altura visual del rayo sin agrandar su base");
+        }
+
+        @Override
+        protected void execute(@Nonnull CommandContext context, @Nonnull Store<EntityStore> store,
+                               @Nonnull Ref<EntityStore> ref, @Nonnull PlayerRef playerRef, @Nonnull World world) {
+            float h = height.get(context);
+            float w = width.get(context);
+            float shift = offset.get(context);
+            if (!validDimensions(h, w) || !Float.isFinite(shift) || Math.abs(shift) > 128f) {
+                context.sendMessage(Message.raw("Altura: 4-128, anchura: 0.2-2, offset: -128 a +128."));
+                return;
+            }
+            try {
+                float actual = previewRay(h, w, color(tint.get(context)), true, shift, ref, store);
+                context.sendMessage(Message.raw(String.format(Locale.ROOT,
+                        "Anclaje: altura solicitada %.1f, altura estimada %.1f, offset Y %+.1f. "
+                                + "Es una calibracion visual, no modifica los assets.", h, actual, shift)));
+            } catch (IllegalArgumentException error) {
+                context.sendMessage(Message.raw(error.getMessage()));
+            }
+        }
+    }
+
+    /** Compara el emisor original de Hytale, sin alterar textura ni animaciones. */
+    private static final class Center extends AbstractPlayerCommand {
+        private final RequiredArg<Float> scale = withRequiredArg("scale", "Escala uniforme, 0.1 a 8", ArgTypes.FLOAT);
+
+        Center() {
+            super("center", "Muestra solo Drop_Legendary_Ray_Center tal como lo dibuja Hytale");
+        }
+
+        @Override
+        protected void execute(@Nonnull CommandContext context, @Nonnull Store<EntityStore> store,
+                               @Nonnull Ref<EntityStore> ref, @Nonnull PlayerRef playerRef, @Nonnull World world) {
+            float size = scale.get(context);
+            if (!Float.isFinite(size) || size < 0.1f || size > 8f) {
+                context.sendMessage(Message.raw("Escala permitida: 0.1 a 8."));
+                return;
+            }
+            Vector3d position = store.getComponent(ref, TransformComponent.getComponentType()).getPosition();
+            try {
+                spawn("Beacon_FX_Native_Ray_Center", new Vector3d(position), size, null, ref, store);
+                context.sendMessage(Message.raw("Rayo central original: escala uniforme, sin tintado forzado."));
             } catch (IllegalArgumentException error) {
                 context.sendMessage(Message.raw(error.getMessage()));
             }
