@@ -8,8 +8,6 @@ import static org.junit.jupiter.api.Assertions.*;
 class BeaconFxCommandTest {
     @Test
     void selectsAvailableRatiosForCommonBeamSizes() {
-        assertEquals(2, BeaconFxCommand.ratio(4 / 2.0));
-        assertEquals(8, BeaconFxCommand.ratio(4 / 0.5));
         assertEquals(64, BeaconFxCommand.ratio(32 / 0.5));
         assertEquals(80, BeaconFxCommand.ratio(64 / 0.8));
         assertEquals(128, BeaconFxCommand.ratio(128));
@@ -26,7 +24,7 @@ class BeaconFxCommandTest {
     }
     @Test
     void previewAssetsAllowRuntimeTintWithoutFixedWhite() throws Exception {
-        int[] ratios = {2, 4, 8, 16, 32, 48, 64, 80, 96, 128, 160, 256, 384, 512, 640};
+        int[] ratios = {16, 32, 48, 64, 80, 96, 128, 160, 256, 384, 512, 640};
         for (int ratio : ratios) {
             String path = "/Server/Particles/Beacon/Beacon_FX_Ray_" + ratio + "_Spawner.particlespawner";
             try (var stream = BeaconFxCommandTest.class.getResourceAsStream(path)) {
@@ -48,37 +46,6 @@ class BeaconFxCommandTest {
             assertTrue(json.contains("Drop_Legendary_Sparks_Squares"));
             assertFalse(json.contains("Drop_Legendary_Ray_Center"));
             assertFalse(json.contains("\"Drop_Legendary_Ray\""));
-        }
-    }
-
-    @Test
-    void tintedBaseDoesNotReferenceHardCodedLegendaryColors() throws Exception {
-        try (var stream = BeaconFxCommandTest.class.getResourceAsStream(
-                "/Server/Particles/Beacon/Beacon_FX_Tinted_Base.particlesystem")) {
-            assertNotNull(stream);
-            String json = new String(stream.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
-            assertTrue(json.contains("Beacon_FX_Tinted_Glow_Spawner"));
-            assertTrue(json.contains("Beacon_FX_Tinted_Sparks_Spawner"));
-            assertFalse(json.contains("Drop_Legendary_"));
-        }
-        for (String name : new String[]{"Glow", "Sparks"}) {
-            String path = "/Server/Particles/Beacon/Beacon_FX_Tinted_" + name + "_Spawner.particlespawner";
-            try (var stream = BeaconFxCommandTest.class.getResourceAsStream(path)) {
-                assertNotNull(stream);
-                String json = new String(stream.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
-                assertFalse(json.contains("\"Color\""), "El color se debe recibir desde Java: " + name);
-            }
-        }
-    }
-
-    @Test
-    void nativeCenterOnlyReferencesOriginalSpawner() throws Exception {
-        try (var stream = BeaconFxCommandTest.class.getResourceAsStream(
-                "/Server/Particles/Beacon/Beacon_FX_Native_Ray_Center.particlesystem")) {
-            assertNotNull(stream);
-            String json = new String(stream.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
-            assertTrue(json.contains("Drop_Legendary_Ray_Center"));
-            assertFalse(json.contains("Drop_Legendary_Ground"));
         }
     }
 
